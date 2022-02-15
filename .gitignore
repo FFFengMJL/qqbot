@@ -3,12 +3,13 @@
 !package-lock.json
 
 /data
-
 /logs
+/plugin/dist
+/plugin/oldSrc
 
 config.yml
 
-*/node_modules
+/node_modules
 
 device.json.bak
 session.token
