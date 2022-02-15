@@ -1,6 +1,6 @@
 *.json
 !tsconfig.json
-!package-lock.json
+!package.json
 
 /data
 /logs
