@@ -1,7 +1,14 @@
 *.json
+!tsconfig.json
+!package-lock.json
+
 /data
+
 /logs
+
 config.yml
+
 */node_modules
+
 device.json.bak
 session.token
