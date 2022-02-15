@@ -6,7 +6,7 @@ const BOT_HTTP_SERVER = {
   PORT: 5700,
 };
 
-type Message = Array<CQCode> | String; // 消息类型
+export type Message = Array<CQCode> | String; // 消息类型
 
 interface MessageResponseData {
   message_id: Number;
