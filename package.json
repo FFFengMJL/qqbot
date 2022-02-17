@@ -19,5 +19,16 @@
     "fs": "^0.0.1-security",
     "node-fetch": "^2.6.6"
   },
-  "type": "commonjs"
+  "type": "commonjs",
+  "nodemonConfig": {
+    "delay": 2500,
+    "ignore": [
+      "./news.json",
+      "plugin/dist/test.js",
+      "plugin/dist/test.js.map"
+    ],
+    "watch": [
+      "plugin/dist/*"
+    ]
+  }
 }

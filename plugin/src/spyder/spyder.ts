@@ -90,8 +90,7 @@ export async function sendNews(
         text: `标题：${news.Title}
 摘要：${news.Summary}
 详情：${news.Author}
-发布日期：${news.PublishDate}
-`,
+发布日期：${news.PublishDate}`,
       },
     },
   ];
