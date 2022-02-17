@@ -1,7 +1,6 @@
-import { MessageType, MessageBody, Message } from "./../http/http";
+import { MessageType, Message } from "./../http/http";
 import { getNewsList, New } from "./news";
 import fs from "fs";
-import { NextFunction } from "express";
 import { sendMessage } from "../http/http";
 
 let NewList: Array<New> = [];
@@ -31,7 +30,7 @@ async function spy(
     }
 
     if (newNew.length) {
-      NewList = NewList.concat(newNew);
+      NewList = newNew.concat(NewList);
       fs.writeFileSync("./news.json", JSON.stringify(NewList));
       console.log(
         `[spy]\tget ${newNew.length} news, now has ${NewList.length} news`

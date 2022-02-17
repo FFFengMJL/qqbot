@@ -1,4 +1,4 @@
-import { Message, MessageType } from "./../http/http";
+import { Message, MessageType } from "../http/http";
 import { sendMessage } from "../http/http";
 import { getCurrentlyShownById, WorldOrDC } from "./universalis";
 import { searchItemFromXIVAPIByName } from "./xivapi";
