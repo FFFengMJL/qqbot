@@ -10,6 +10,8 @@ interface SpyTime {
   second: Number; // 小于这个时间进行一次爬取
   minute: Number; // 间隔时间
   hour?: Number;
+  startHour?: Number;
+  endHour?: Number;
 }
 
 async function spy(
@@ -55,11 +57,23 @@ export async function initSpyder(
     if (
       now.getSeconds() <= spyTime.second &&
       now.getMinutes() % (spyTime.minute as number) === 0 &&
-      (!spyTime?.hour || now.getHours() % (spyTime?.hour as number) === 0)
+      (!spyTime?.hour || now.getHours() % (spyTime?.hour as number) === 0) && // 不存在间隔小时 或者 存在间隔小时并满足间隔
+      (!(spyTime?.startHour && spyTime?.endHour) || // 两者都有的反
+        (now.getHours() >= (spyTime?.startHour as number) && // 两者都存在并满足
+          now.getHours() <= (spyTime?.endHour as number)))
     ) {
-      console.log("[spy] start");
+      console.log(
+        `[${new Date().toLocaleString("zh-CN", {
+          hourCycle: "h23",
+        })}] [spy] start`
+      );
+
       await spy(messageType, targetId, next);
-      console.log("[spy] end");
+      console.log(
+        `[${new Date().toLocaleString("zh-CN", {
+          hourCycle: "h23",
+        })}] [spy] end`
+      );
     }
   }, (spyTime.second as number) * 1000);
 }
