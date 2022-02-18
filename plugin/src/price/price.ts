@@ -1,7 +1,7 @@
 import { Message, MessageType } from "../http/http";
 import { sendMessage } from "../http/http";
 import { getCurrentlyShownById, WorldOrDC } from "./universalis";
-import { searchItemFromXIVAPIByName } from "./xivapi";
+import { searchTradableItemFromXIVAPIByName } from "./xivapi";
 export async function getPrice(
   targetType: MessageType,
   targetId: Number,
@@ -13,10 +13,22 @@ export async function getPrice(
       `[${new Date().toLocaleString("zh-cn", {
         hourCycle: "h23",
         timeStyle: "medium",
-        dateStyle: "medium",
+        dateStyle: "short",
       })}] [PRICE] search [${itemString}] in [${worldOrDC}]`
     );
-    const itemSearchResponse = await searchItemFromXIVAPIByName(itemString);
+    const itemSearchResponse = await searchTradableItemFromXIVAPIByName(
+      itemString
+    );
+
+    console.log(
+      `[${new Date().toLocaleString("zh-cn", {
+        hourCycle: "h23",
+        timeStyle: "medium",
+        dateStyle: "short",
+      })}] [PRICE] get [${
+        itemSearchResponse.Pagination.ResultsTotal
+      }] results about [${itemString}]`
+    );
 
     if (itemSearchResponse.Pagination.ResultsTotal === 0) {
       return sendMessage(
@@ -25,7 +37,7 @@ export async function getPrice(
         "没有对应的物品，请重新输入",
         false
       );
-    } else if (itemSearchResponse.Pagination.ResultsTotal > 2) {
+    } else if (itemSearchResponse.Pagination.ResultsTotal > 5) {
       let itemList = itemSearchResponse.Results.map((item) => item.Name).join(
         "\n"
       );
@@ -56,16 +68,28 @@ export async function getPrice(
         .map((item) => {
           return `${item.pricePerUnit} * ${item.quantity} = ${item.total}${
             item.hq ? " hq" : ""
-          }\t${item.buyerName}${item?.worldName ? `(${item.worldName})` : ""}`;
+          }\t${item.buyerName}${
+            item?.worldName ? `(${item.worldName})` : ""
+          } [${new Date((item.timestamp as number) * 1000).toLocaleString(
+            "zh-cn",
+            {
+              hourCycle: "h23",
+              timeStyle: "short",
+              dateStyle: "short",
+            }
+          )}]`;
         })
         .join("\n");
 
       let warning = "";
-      if (itemSearchResponse.Pagination.ResultsTotal == 2) {
+      if (
+        itemSearchResponse.Pagination.ResultsTotal <= 5 &&
+        itemSearchResponse.Pagination.ResultsTotal > 1
+      ) {
         let itemList = itemSearchResponse.Results.map((item) => item.Name).join(
           "\n"
         );
-        warning = `搜索到 2 个物品，默认使用选择第 1 个：\n${itemList}\n\n`;
+        warning = `搜索到 ${itemSearchResponse.Pagination.PageTotal} 个物品，默认使用选择第 1 个：\n${itemList}\n\n`;
       }
 
       const message: Message = [
@@ -76,6 +100,18 @@ export async function getPrice(
           },
         },
       ];
+
+      console.log(
+        `[${new Date().toLocaleString("zh-cn", {
+          hourCycle: "h23",
+          timeStyle: "medium",
+          dateStyle: "short",
+        })}] [PRICE] get [${currentlyShown.listings.length}] onsales and [${
+          currentlyShown.recentHistory.length
+        }] history about [${
+          itemSearchResponse.Results[0].Name
+        }] in [${worldOrDC}]`
+      );
 
       return sendMessage(targetType, targetId, message);
     }

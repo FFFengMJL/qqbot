@@ -29,13 +29,14 @@ interface XIVAPISearchResponse {
   SpeedMs: Number;
 }
 
-export async function searchItemFromXIVAPIByName(
+export async function searchTradableItemFromXIVAPIByName(
   itemString: String,
-  limit: Number = 10
+  limit: Number = 10,
+  isUntradable: 0 | 1 = 0
 ) {
   const url = `${XIVAPI_CN}/search?indexes=Item&string=${encodeURI(
     itemString.toString()
-  )}&limit=${limit}`;
+  )}&limit=${limit}&filters=IsUntradable=${isUntradable}`;
   const response = await axios.get(url);
   return response.data as XIVAPISearchResponse;
 }

@@ -56,7 +56,7 @@ export function isWorldOrDC(str: String) {
 }
 
 interface Shown {
-  lastReviewTime: Date; // 上次看到的时间戳
+  lastReviewTime: Number; // 上次看到的时间戳
   pricePerUnit: Number; // 单价
   quantity: Number; // 数量
   stainID: Number;
@@ -80,7 +80,7 @@ interface Sold {
   hq: Boolean; // 是否是 HQ
   pricePerUnit: Number; // 单价
   quantity: Number; // 数量
-  timestamp: Date; // 时间戳
+  timestamp: Number; // 时间戳
   worldName?: WorldOrDC; // 服务器名称
   worldID?: Number; // 服务器 ID
   buyerName: String; // 购买者昵称

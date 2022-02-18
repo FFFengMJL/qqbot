@@ -1,6 +1,4 @@
-import { MessageType } from "./../http/http";
-import { MessageBody, sendMessage, MessageTypeO } from "../http/http";
-import { CQCode } from "../http/message";
+import { Message, sendMessage, MessageType } from "./../http/http";
 
 /**
  * 整点报时闹钟
@@ -37,7 +35,7 @@ export function clock(
     now.getMinutes() == 0 &&
     now.getHours() % timeInterval == startTime
   ) {
-    const postMessage: Array<CQCode> = [
+    const postMessage: Message = [
       {
         type: "text",
         data: {
@@ -50,11 +48,9 @@ export function clock(
       },
     ];
 
-    return sendMessage(targetType, targetId, postMessage, false).then(
-      (result) => {
-        console.log("clocked", result);
-      }
-    );
+    return sendMessage(targetType, targetId, postMessage).then((result) => {
+      console.log("clocked", result);
+    });
   }
   return 0;
 }

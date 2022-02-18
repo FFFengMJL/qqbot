@@ -1,41 +1,19 @@
-type CQCodeType =
-  | "face"
-  | "text"
-  | "image"
-  | "record"
-  | "video"
-  | "at"
-  | "rps"
-  | "dice"
-  | "shake"
-  | "poke"
-  | "anonymous"
-  | "share"
-  | "contact"
-  | "location"
-  | "music"
-  | "reply"
-  | "forward"
-  | "node"
-  | "xml"
-  | "json";
-
 interface CQText {
-  type: CQCodeType;
+  type: "text";
   data: {
     text: String;
   };
 }
 
 interface CQFace {
-  type: CQCodeType;
+  type: "face";
   data: {
     id: Number;
   };
 }
 
 interface CQImage {
-  type: CQCodeType;
+  type: "image";
   data: {
     file: String;
     flash?: "flash";
@@ -47,7 +25,7 @@ interface CQImage {
 }
 
 interface CQRecord {
-  type: CQCodeType;
+  type: "record";
   data: {
     file: String;
     magic?: 0 | 1;
@@ -59,7 +37,7 @@ interface CQRecord {
 }
 
 interface CQVideo {
-  type: CQCodeType;
+  type: "video";
   data: {
     file: String;
     url?: String;
@@ -70,19 +48,19 @@ interface CQVideo {
 }
 
 interface CQAt {
-  type: CQCodeType;
+  type: "at";
   data: {
     qq: Number;
   };
 }
 
 interface CQRps {
-  type: CQCodeType;
+  type: "rps";
   data: {};
 }
 
 interface CQDice {
-  type: CQCodeType;
+  type: "dice";
   data: {};
 }
 
@@ -95,3 +73,5 @@ export type CQCode =
   | CQRecord
   | CQRps
   | CQVideo;
+
+type CQCodeType = CQCode["type"];
