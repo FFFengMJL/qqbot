@@ -25,13 +25,6 @@ interface BasicMessageBody {
 
 export type MessageType = "private" | "group";
 
-const Private: MessageType = "private";
-const Group: MessageType = "group";
-export const MessageTypeO = {
-  Private,
-  Group,
-};
-
 export type MessageBody = BasicMessageBody & {
   message_type: MessageType;
   user_id?: Number;
@@ -82,13 +75,13 @@ export async function sendMessage(
   message: Message,
   auto_escape: Boolean = true
 ) {
-  if (messageType === MessageTypeO.Private) {
+  if (messageType === "private") {
     return await sendPrivateMessage({
       message,
       user_id: targetId,
       auto_escape,
     } as PrivateMessageBody);
-  } else if (messageType === MessageTypeO.Group) {
+  } else if (messageType === "group") {
     return await sendGroupMessage({
       message,
       group_id: targetId,
