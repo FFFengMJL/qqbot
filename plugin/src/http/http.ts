@@ -13,9 +13,11 @@ interface MessageResponseData {
 }
 
 interface MessageResponse {
-  data: MessageResponseData;
+  data: MessageResponseData | null;
   retcode: Number;
   status: String;
+  msg?: String;
+  wording?: String;
 }
 
 interface BasicMessageBody {
@@ -25,11 +27,7 @@ interface BasicMessageBody {
 
 export type MessageType = "private" | "group";
 
-export type MessageBody = BasicMessageBody & {
-  message_type: MessageType;
-  user_id?: Number;
-  group_id?: Number;
-};
+export type MessageBody = PrivateMessageBody | GroupMessageBody;
 
 /**
  * 私聊消息
@@ -80,13 +78,13 @@ export async function sendMessage(
       message,
       user_id: targetId,
       auto_escape,
-    } as PrivateMessageBody);
+    });
   } else if (messageType === "group") {
     return await sendGroupMessage({
       message,
       group_id: targetId,
       auto_escape,
-    } as GroupMessageBody);
+    });
   } else {
     return null;
   }

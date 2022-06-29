@@ -1,7 +1,6 @@
-import { MessageType, Message } from "./../http/http";
+import { MessageType, Message, sendMessage } from "./../http/http";
 import { getNewsList, New } from "./news";
 import fs from "fs";
-import { sendMessage } from "../http/http";
 
 let NewList: Array<New> = [];
 
@@ -13,27 +12,36 @@ interface SpyTime {
   endHour?: Number;
 }
 
-async function spy(
+export async function spy(
   messageType: MessageType,
   targetId: Number,
   next?: Function
 ) {
   try {
-    const newList = (await getNewsList()).Data;
-    const newNew: Array<New> = [];
+    const currentNews = (await getNewsList()).Data;
+    const unaddedNew: Array<New> = [];
 
-    for (let item of newList) {
-      if (!NewList.some((value) => value.Id === item.Id)) {
-        newNew.push(item);
+    console.log(`[SPYDER] currentNews: ${currentNews.length}`);
+
+    for (let item of currentNews) {
+      if (
+        !NewList.some(
+          (value) =>
+            value.Id === item.Id && value.PublishDate === item.PublishDate
+        )
+      ) {
+        unaddedNew.push(item);
         sendNews(messageType, targetId, item);
       }
     }
 
-    if (newNew.length) {
-      NewList = newNew.concat(NewList);
-      fs.writeFileSync("./news.json", JSON.stringify(NewList));
+    console.log(`[SPYDER] unaddedNews: ${unaddedNew}`);
+
+    if (unaddedNew.length) {
+      NewList = unaddedNew.concat(NewList);
+      fs.writeFileSync("./news.json", JSON.stringify(NewList, null, "  "));
       console.log(
-        `[spy]\tget ${newNew.length} news, now has ${NewList.length} news`
+        `[SPYDER] get ${unaddedNew.length} news, now has ${NewList.length} news`
       );
     }
   } catch (err) {
@@ -64,14 +72,14 @@ export async function initSpyder(
       console.log(
         `[${new Date().toLocaleString("zh-CN", {
           hourCycle: "h23",
-        })}] [spy] start`
+        })}] [SPYDER] start`
       );
 
       await spy(messageType, targetId, next);
       console.log(
         `[${new Date().toLocaleString("zh-CN", {
           hourCycle: "h23",
-        })}] [spy] end`
+        })}] [SPYDER] end`
       );
     }
   }, (spyTime.second as number) * 1000);

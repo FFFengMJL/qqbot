@@ -3,6 +3,7 @@ import axios from "axios";
 const _Worlds = [
   {
     name: "陆行鸟",
+    nickname: "狗",
     worlds: [
       "红玉海",
       "神意之地",
@@ -16,6 +17,7 @@ const _Worlds = [
   },
   {
     name: "莫古力",
+    nickname: "狗",
     worlds: [
       "白银乡",
       "白金幻象",
@@ -29,6 +31,7 @@ const _Worlds = [
   },
   {
     name: "猫小胖",
+    nickname: "狗",
     worlds: [
       "紫水栈桥",
       "延夏",
@@ -49,6 +52,11 @@ const _Worlds = [
 export type DC = typeof _Worlds[number]["name"];
 export type WorldOrDC = typeof _Worlds[number]["worlds"][number] | DC;
 
+/**
+ * 判断字符串是否是服务器/大区
+ * @param str 字符串
+ * @returns
+ */
 export function isWorldOrDC(str: String) {
   return _Worlds.some((dc) => {
     return dc.name === str || dc.worlds.some((world) => world === str);
@@ -126,6 +134,7 @@ export async function getCurrentlyShownById(
   const requestURL = `${UniversalisURL}/api/${encodeURI(
     worldOrDc
   )}/${itemId}?listings=${listings}`;
+
   const response = await axios.get(requestURL, {
     proxy: {
       host: "127.0.0.1",

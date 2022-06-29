@@ -37,6 +37,8 @@ export async function searchTradableItemFromXIVAPIByName(
   const url = `${XIVAPI_CN}/search?indexes=Item&string=${encodeURI(
     itemString.toString()
   )}&limit=${limit}&filters=IsUntradable=${isUntradable}`;
+
   const response = await axios.get(url);
+
   return response.data as XIVAPISearchResponse;
 }

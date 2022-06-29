@@ -9,14 +9,14 @@ import { Message, sendMessage, MessageType } from "./../http/http";
  */
 export function initClock(
   startTime = 0,
-  timeInterval = 3,
+  hourInterval = 3,
   targetType: MessageType = "group",
   targetId: Number
 ) {
-  setInterval(() => clock(startTime, timeInterval, targetType, targetId), 100);
+  setInterval(() => clock(startTime, hourInterval, targetType, targetId), 100);
   console.log(`\
 Set a Clock: startTime - ${startTime}
-             timeInterval - ${timeInterval}
+             hourInterval - ${hourInterval}
              targetType - ${targetType}
              targetId - ${targetId}`);
   return 1;
@@ -49,7 +49,13 @@ export function clock(
     ];
 
     return sendMessage(targetType, targetId, postMessage).then((result) => {
-      console.log("clocked", result);
+      console.log(
+        `[${now.toLocaleString("zh-CN", {
+          hourCycle: "h23",
+          dateStyle: "short",
+          timeStyle: "medium",
+        })}] [CLOCK] send [${targetType}] [${targetId}] [${result?.status}]`
+      );
     });
   }
   return 0;

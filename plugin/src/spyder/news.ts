@@ -1,5 +1,4 @@
 import axios from "axios";
-import fs from "fs";
 
 const URL = `https://ff.web.sdo.com/inc/newdata.ashx`;
 

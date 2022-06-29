@@ -1,5 +1,4 @@
-import { Message, MessageType } from "../http/http";
-import { sendMessage } from "../http/http";
+import { Message, MessageType, sendMessage } from "../http/http";
 import { getCurrentlyShownById, WorldOrDC } from "./universalis";
 import { searchTradableItemFromXIVAPIByName } from "./xivapi";
 export async function getPrice(
@@ -81,16 +80,10 @@ export async function getPrice(
         })
         .join("\n");
 
-      let warning = "";
-      if (
-        itemSearchResponse.Pagination.ResultsTotal <= 5 &&
-        itemSearchResponse.Pagination.ResultsTotal > 1
-      ) {
-        let itemList = itemSearchResponse.Results.map((item) => item.Name).join(
-          "\n"
-        );
-        warning = `搜索到 ${itemSearchResponse.Pagination.PageTotal} 个物品，默认使用选择第 1 个：\n${itemList}\n\n`;
-      }
+      let itemList = itemSearchResponse.Results.map((item) => item.Name).join(
+        "\n"
+      );
+      const warning = `搜索到 ${itemSearchResponse.Pagination.PageTotal} 个物品，默认使用选择第 1 个：\n${itemList}\n\n`;
 
       const message: Message = [
         {
