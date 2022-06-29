@@ -6,6 +6,7 @@
 /logs
 /plugin/dist
 /plugin/oldSrc
+/dumps
 
 config.yml
 
