@@ -1,3 +1,4 @@
+import { getRandomImageWithPixivic } from "../pixiv/mirror";
 import { Message, sendMessage, MessageType } from "./../http/http";
 
 /**
@@ -22,7 +23,7 @@ Set a Clock: startTime - ${startTime}
   return 1;
 }
 
-export function clock(
+export async function clock(
   startTime = 0,
   timeInterval = 3,
   targetType: MessageType = "group",
@@ -47,6 +48,18 @@ export function clock(
         },
       },
     ];
+
+    const randomPixivImage = await getRandomImageWithPixivic();
+
+    if (randomPixivImage !== null) {
+      postMessage.push({
+        type: "image",
+        data: {
+          file: randomPixivImage,
+          c: 3,
+        },
+      });
+    }
 
     return sendMessage(targetType, targetId, postMessage).then((result) => {
       console.log(

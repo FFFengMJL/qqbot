@@ -21,17 +21,29 @@ enum CQImageEffects {
   征友,
 }
 
+enum CQImageSubType {
+  正常图片 = 0,
+  "表情包, 在客户端会被分类到表情包图片并缩放显示",
+  热图,
+  斗图,
+  "智图?",
+  贴图 = 7,
+  自拍,
+  "贴图广告?",
+  有待测试,
+  热搜图 = 13,
+}
+
 interface CQImage {
   type: "image";
   data: {
-    file: String;
-    flash?: "flash" | "show";
+    file?: String;
+    type?: "flash" | "show";
     url?: String;
     cache?: 0 | 1;
-    proxy?: 0 | 1;
-    time?: Number;
+    subType?: CQImageSubType;
     c?: 2 | 3;
-    id: CQImageEffects;
+    id?: CQImageEffects;
   };
 }
 

@@ -1,3 +1,4 @@
+import { getRandomImageWithPixivic } from "../pixiv/mirror";
 import { Message, MessageType, sendMessage } from "./../http/http";
 
 /**
@@ -6,7 +7,9 @@ import { Message, MessageType, sendMessage } from "./../http/http";
  * @param targetId 目标id
  * @param message 消息
  */
-export function sendNowTime(targetType: MessageType, targetId: Number) {
+export async function sendNowTime(targetType: MessageType, targetId: Number) {
+  const randomPixivImage = await getRandomImageWithPixivic();
+
   const nowTime: Message = [
     {
       type: "text",
@@ -19,6 +22,16 @@ export function sendNowTime(targetType: MessageType, targetId: Number) {
       },
     },
   ];
+
+  if (randomPixivImage !== null) {
+    nowTime.push({
+      type: "image",
+      data: {
+        file: randomPixivImage,
+        c: 3,
+      },
+    });
+  }
 
   return sendMessage(targetType, targetId, nowTime, false);
 }

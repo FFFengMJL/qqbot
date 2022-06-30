@@ -71,7 +71,7 @@ export async function sendMessage(
   messageType: MessageType,
   targetId: Number,
   message: Message,
-  auto_escape: Boolean = true
+  auto_escape: Boolean = false
 ) {
   if (messageType === "private") {
     return await sendPrivateMessage({
