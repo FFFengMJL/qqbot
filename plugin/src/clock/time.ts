@@ -1,4 +1,4 @@
-import { getRandomImageWithPixivic } from "../pixiv/mirror";
+import { getRandomImageWithRSSHub } from "../pixiv/rsshub";
 import { Message, MessageType, sendMessage } from "./../http/http";
 
 /**
@@ -8,7 +8,7 @@ import { Message, MessageType, sendMessage } from "./../http/http";
  * @param message 消息
  */
 export async function sendNowTime(targetType: MessageType, targetId: Number) {
-  const randomPixivImage = await getRandomImageWithPixivic();
+  const randomPixivImage = await getRandomImageWithRSSHub();
 
   const nowTime: Message = [
     {
@@ -23,7 +23,7 @@ export async function sendNowTime(targetType: MessageType, targetId: Number) {
     },
   ];
 
-  if (randomPixivImage !== null) {
+  if (!!randomPixivImage) {
     nowTime.push({
       type: "image",
       data: {

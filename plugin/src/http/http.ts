@@ -6,12 +6,21 @@ const BOT_HTTP_SERVER = {
   PORT: 5700,
 };
 
-export type Message = Array<CQCode> | String; // 消息类型
+/**
+ * 消息类型
+ */
+export type Message = Array<CQCode> | String;
 
+/**
+ * 发送消息后的响应数据
+ */
 interface MessageResponseData {
   message_id: Number;
 }
 
+/**
+ * 发送消息后的响应
+ */
 interface MessageResponse {
   data: MessageResponseData | null;
   retcode: Number;
@@ -52,7 +61,11 @@ type GroupMessageBody = BasicMessageBody & {
 export async function sendPrivateMessage(body: PrivateMessageBody) {
   const response = await axios.post(
     `${BOT_HTTP_SERVER.HOST}:${BOT_HTTP_SERVER.PORT}/send_private_msg`,
-    body
+    body,
+    {
+      timeout: 60000,
+      maxBodyLength: 30000000,
+    }
   );
 
   return response.data as MessageResponse;
@@ -61,7 +74,11 @@ export async function sendPrivateMessage(body: PrivateMessageBody) {
 export async function sendGroupMessage(body: GroupMessageBody) {
   const response = await axios.post(
     `${BOT_HTTP_SERVER.HOST}:${BOT_HTTP_SERVER.PORT}/send_group_msg`,
-    body
+    body,
+    {
+      timeout: 60000,
+      maxBodyLength: 30000000,
+    }
   );
 
   return response.data as MessageResponse;

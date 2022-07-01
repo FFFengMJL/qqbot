@@ -1,4 +1,4 @@
-import { getRandomImageWithPixivic } from "../pixiv/mirror";
+import { getRandomImageWithRSSHub } from "../pixiv/rsshub";
 import { Message, sendMessage, MessageType } from "./../http/http";
 
 /**
@@ -49,9 +49,9 @@ export async function clock(
       },
     ];
 
-    const randomPixivImage = await getRandomImageWithPixivic();
+    const randomPixivImage = await getRandomImageWithRSSHub();
 
-    if (randomPixivImage !== null) {
+    if (randomPixivImage) {
       postMessage.push({
         type: "image",
         data: {
