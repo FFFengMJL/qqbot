@@ -1,3 +1,6 @@
+/**
+ * api 参数
+ */
 export type PixivicRankingParam = {
   page: PixivicPage;
   date: PixivicDate;
@@ -5,16 +8,34 @@ export type PixivicRankingParam = {
   pageSize: PixivicPageSize;
 };
 
+/**
+ * 榜单类型
+ */
 export type PixivicMode = "day" | "week" | "month" | "female" | "male";
+/**
+ * 榜单页码
+ */
 export type PixivicPage = number;
+/**
+ * 榜单单页数据数量
+ */
 export type PixivicPageSize = number;
+/**
+ * 榜单日期
+ */
 export type PixivicDate = string;
 
+/**
+ * pixivic.com 的响应
+ */
 export interface PixvicListResponse {
   message: string;
   data?: Array<PixivicListItem>;
 }
 
+/**
+ * pixivic.com 响应的列表数据
+ */
 export interface PixivicListItem {
   id: number;
   artistId: number;
@@ -36,6 +57,9 @@ export interface PixivicListItem {
   xrestrict: number;
 }
 
+/**
+ * 画师预览
+ */
 interface PixivicArtistPreView {
   id: number;
   name: string;
@@ -43,12 +67,18 @@ interface PixivicArtistPreView {
   avatar: string;
 }
 
+/**
+ * 图片标签
+ */
 interface PixivicTag {
   name: string;
   translatedName: string;
   id: number;
 }
 
+/**
+ * 图片 url，是 pixiv 链接
+ */
 interface PixivicImageUrls {
   squareMedium: string;
   medium: string;

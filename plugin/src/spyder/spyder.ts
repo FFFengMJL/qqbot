@@ -1,16 +1,10 @@
 import { MessageType, Message, sendMessage } from "./../http/http";
-import { getNewsList, New } from "./news";
+import { getNewsList } from "./news";
 import fs from "fs";
+import { New } from "./news.type";
+import { SpyTime } from "./spyder.type";
 
 let NewList: Array<New> = [];
-
-interface SpyTime {
-  second: Number; // 小于这个时间进行一次爬取
-  minute: Number; // 间隔时间
-  hour?: Number;
-  startHour?: Number;
-  endHour?: Number;
-}
 
 export async function spy(
   messageType: MessageType,
@@ -54,7 +48,7 @@ export async function initSpyder(
   targetId: Number,
   spyTime: SpyTime = {
     second: 10,
-    minute: 10,
+    minute: 5,
   },
   next?: Function
 ) {
@@ -63,11 +57,11 @@ export async function initSpyder(
     const now = new Date();
     if (
       now.getSeconds() <= spyTime.second &&
-      now.getMinutes() % (spyTime.minute as number) === 0 &&
-      (!spyTime?.hour || now.getHours() % (spyTime?.hour as number) === 0) && // 不存在间隔小时 或者 存在间隔小时并满足间隔
+      now.getMinutes() % spyTime.minute === 0 &&
+      (!spyTime?.hour || now.getHours() % spyTime?.hour === 0) && // 不存在间隔小时 或者 存在间隔小时并满足间隔
       (!(spyTime?.startHour && spyTime?.endHour) || // 两者都有的反
-        (now.getHours() >= (spyTime?.startHour as number) && // 两者都存在并满足
-          now.getHours() <= (spyTime?.endHour as number)))
+        (now.getHours() >= spyTime?.startHour && // 两者都存在并满足
+          now.getHours() <= spyTime?.endHour))
     ) {
       console.log(
         `[${new Date().toLocaleString("zh-CN", {
@@ -82,7 +76,7 @@ export async function initSpyder(
         })}] [SPYDER] end`
       );
     }
-  }, (spyTime.second as number) * 1000);
+  }, spyTime.second * 1000);
 }
 
 export async function sendNews(
@@ -91,6 +85,12 @@ export async function sendNews(
   news: New
 ) {
   const message: Message = [
+    {
+      type: "image",
+      data: {
+        file: news.HomeImagePath,
+      },
+    },
     {
       type: "text",
       data: {
