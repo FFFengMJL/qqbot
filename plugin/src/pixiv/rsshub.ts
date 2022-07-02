@@ -1,5 +1,6 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
+import { PixivImage } from "./pixiv.type";
 import { getPixivImageToBase64 } from "./pixivCat";
 import { RSSHubPixivRankingDate, RSSHubPixivRankingMode } from "./rsshub.type";
 
@@ -53,7 +54,7 @@ export async function getRandomImageWithRSSHub(
   const responseString = await getPixivRankListFromRSShub(mode, date);
 
   if (!responseString) {
-    return responseString;
+    return undefined;
   }
 
   // 解析 xml，得到 item 标签的列表
@@ -61,13 +62,30 @@ export async function getRandomImageWithRSSHub(
     xmlMode: true,
   })("item");
 
+  console.log(`[PIXIV] itemListLength: ${items.length}`);
+
   const index = Math.floor(Math.random() * items.length); // 随机选择
+
+  const artist = items.eq(index).find("author").text(); // 作者
+  const link = items.eq(index).find("link").text(); // 作品链接
+  const title = items
+    .eq(index)
+    .find("title")
+    .text()
+    .split(" ")
+    .slice(1)
+    .join(" "); // 作品名
   const imgSrc = cheerio.load(items.eq(index).text())("img").attr("src"); // 获取图片链接
 
   if (!imgSrc) return undefined;
 
   const imgCatUrl = imgSrc.replace("i.pximg.net", "i.pixiv.cat"); // 对域名进行替换
-  const imageBase64 = await getPixivImageToBase64(imgCatUrl); // 得到 base64 标签
+  const base64 = await getPixivImageToBase64(imgCatUrl); // 得到 base64 字符串
 
-  return imageBase64;
+  return {
+    artist,
+    link,
+    base64,
+    title,
+  } as PixivImage;
 }

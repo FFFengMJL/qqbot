@@ -1,3 +1,4 @@
+import { getRandomImageWithPixiv } from "../pixiv/pixiv";
 import { getRandomImageWithRSSHub } from "../pixiv/rsshub";
 import { Message, MessageType, sendMessage } from "./../http/http";
 
@@ -8,7 +9,7 @@ import { Message, MessageType, sendMessage } from "./../http/http";
  * @param message 消息
  */
 export async function sendNowTime(targetType: MessageType, targetId: Number) {
-  const randomPixivImage = await getRandomImageWithRSSHub();
+  const randomPixivImage = await getRandomImageWithPixiv("daily", 6);
 
   const nowTime: Message = [
     {
@@ -24,13 +25,22 @@ export async function sendNowTime(targetType: MessageType, targetId: Number) {
   ];
 
   if (!!randomPixivImage) {
-    nowTime.push({
-      type: "image",
-      data: {
-        file: randomPixivImage,
-        c: 3,
+    const randomPixivImageMessage: Message = [
+      {
+        type: "image",
+        data: {
+          file: randomPixivImage.base64,
+          c: 3,
+        },
       },
-    });
+      {
+        type: "text",
+        data: {
+          text: `\n作品名：${randomPixivImage.title}  画师：${randomPixivImage.artist}  链接：${randomPixivImage.link}`,
+        },
+      },
+    ];
+    nowTime.push(...randomPixivImageMessage);
   }
 
   return sendMessage(targetType, targetId, nowTime, false);
