@@ -1,4 +1,4 @@
-const URL = `https://ff.web.sdo.com/inc/newdata.ashx`;
+export const FFXIV_CHINA_NEWS_HOST = `https://ff.web.sdo.com/inc/newdata.ashx`;
 
 export interface New {
   Id: Number; // 文章 Id
