@@ -59,29 +59,39 @@ type GroupMessageBody = BasicMessageBody & {
  * @param message 消息
  */
 export async function sendPrivateMessage(body: PrivateMessageBody) {
-  const response = await axios.post(
-    `${BOT_HTTP_SERVER.HOST}:${BOT_HTTP_SERVER.PORT}/send_private_msg`,
-    body,
-    {
-      timeout: 60000,
-      maxBodyLength: 30000000,
-    }
-  );
+  try {
+    const response = await axios.post(
+      `${BOT_HTTP_SERVER.HOST}:${BOT_HTTP_SERVER.PORT}/send_private_msg`,
+      body,
+      {
+        timeout: 60000,
+        maxBodyLength: 30000000,
+      }
+    );
 
-  return response.data as MessageResponse;
+    return response.data as MessageResponse;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }
 
 export async function sendGroupMessage(body: GroupMessageBody) {
-  const response = await axios.post(
-    `${BOT_HTTP_SERVER.HOST}:${BOT_HTTP_SERVER.PORT}/send_group_msg`,
-    body,
-    {
-      timeout: 60000,
-      maxBodyLength: 30000000,
-    }
-  );
+  try {
+    const response = await axios.post(
+      `${BOT_HTTP_SERVER.HOST}:${BOT_HTTP_SERVER.PORT}/send_group_msg`,
+      body,
+      {
+        timeout: 60000,
+        maxBodyLength: 30000000,
+      }
+    );
 
-  return response.data as MessageResponse;
+    return response.data as MessageResponse;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }
 
 export async function sendMessage(
