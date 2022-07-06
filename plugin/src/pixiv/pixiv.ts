@@ -1,4 +1,7 @@
+import { subDays } from "date-fns";
+import { format } from "date-fns-tz";
 import {
+  ILLUST_TYPE_FILETER,
   PixivArtworksContent,
   PixivArtworksIllust,
   PixivImage,
@@ -8,10 +11,16 @@ import {
   TAG_EXCLUDE_FILTER,
   TYPE_FILTER,
 } from "./pixiv.type";
-import axios, { AxiosResponse } from "axios";
+import axios from "axios";
 import * as cheerio from "cheerio";
 import { get as ObjectGet } from "lodash";
 import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
+import { PixivRankingImage, PrismaClient } from "@prisma/client";
+
+const PixivDBClient = {
+  pixivRankingImage: new PrismaClient().pixivRankingImage,
+  pixivArtwork: new PrismaClient().pixivArtwork,
+};
 
 /**
  * 用于与 pixiv.net 进行请求
@@ -20,7 +29,7 @@ const PixivClient = axios.create({
   headers: {
     "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37",
-    Referer: "https://www.pixiv.net",
+    Referer: "https://www.pixiv.net/",
   },
   proxy: {
     host: "127.0.0.1",
@@ -276,9 +285,31 @@ export function filterImageList(imageList: Array<PixivRankingImageItem>) {
       const type = _ as keyof typeof TYPE_FILTER;
       return TYPE_FILTER[type] === item.illust_content_type[type];
     }); // 符合 type 的要求
+    const illustTypeCheck = !ILLUST_TYPE_FILETER.includes(item.illust_type);
 
     // console.log(tagCheck, typeCheck);
-    return tagCheck && typeCheck;
+    return tagCheck && typeCheck && illustTypeCheck;
+  });
+}
+
+/**
+ * 从数据库中获取的日榜列表进行筛选
+ * @param imageList
+ * @returns
+ */
+export function filterImageListFromDB(imageList: Array<PixivRankingImage>) {
+  return imageList.filter((item) => {
+    const tagCheck = !item.tags
+      .split(",")
+      .some((tag) => TAG_EXCLUDE_FILTER.includes(tag)); // 不含有对应的 tag
+    const typeCheck = Object.keys(TYPE_FILTER).every((_) => {
+      const type = _ as keyof typeof TYPE_FILTER;
+      return TYPE_FILTER[type] === item[type];
+    }); // 符合 type 的要求
+    const illustTypeCheck = !ILLUST_TYPE_FILETER.includes(item.illust_type);
+
+    // console.log(tagCheck, typeCheck);
+    return tagCheck && typeCheck && illustTypeCheck;
   });
 }
 
@@ -303,6 +334,204 @@ export async function getPixivImageToBase64(url: string) {
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
       "base64"
     )}`;
+  } catch (error: any) {
+    if (error.response) {
+      // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
+      console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+    } else if (error.request) {
+      // 请求已经成功发起，但没有收到响应
+      // `error.request` 在浏览器中是 XMLHttpRequest 的实例，
+      // 而在node.js中是 http.ClientRequest 的实例
+      console.log(error.request);
+    } else {
+      // 发送请求时出了点问题
+      console.log("Error", error.message);
+    }
+    console.log(error.config);
+
+    return undefined;
+  }
+}
+
+/**
+ * 将排行榜的图片在数据库中创建或更新
+ * @param imageItem 图片
+ * @returns
+ */
+export async function upsertImageRankingItem(
+  imageItem: PixivRankingImageItem,
+  rankDate: string
+) {
+  try {
+    const {
+      sexual,
+      lo,
+      grotesque,
+      violent,
+      homosexual,
+      drug,
+      thoughts,
+      antisocial,
+      religion,
+      original,
+      furry,
+      bl,
+      yuri,
+    } = imageItem.illust_content_type;
+
+    const {
+      illust_id,
+      title,
+      user_id,
+      user_name,
+      tags,
+      date,
+      rank,
+      illust_type,
+    } = imageItem;
+
+    return await PixivDBClient.pixivRankingImage.upsert({
+      where: {
+        illust_id: imageItem.illust_id,
+      },
+      update: {
+        rankDate,
+        rank,
+        illust_type,
+      },
+      create: {
+        illust_id,
+        title,
+        user_id,
+        user_name,
+        date,
+        sexual,
+        lo,
+        grotesque,
+        violent,
+        homosexual,
+        drug,
+        thoughts,
+        antisocial,
+        religion,
+        original,
+        furry,
+        bl,
+        yuri,
+        rankDate,
+        tags: tags.join(","),
+        rank,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+}
+
+/**
+ * 检测图片是否存在，依据为 illust_id 和 rankDate
+ * @param imageItem 图片
+ * @param rankDate 日榜日期
+ * @returns
+ */
+export async function isPixivRankingImageItemInDB(
+  imageItem: PixivRankingImageItem,
+  rankDate: string
+) {
+  try {
+    const result = await PixivDBClient.pixivRankingImage.findUnique({
+      where: { illust_id: imageItem.illust_id },
+    });
+
+    if (!result) {
+      return result;
+    }
+
+    return result.rankDate == rankDate;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+}
+
+/**
+ * 从数据库中获取当天日榜随机图片
+ * @param maxLimit
+ * @returns
+ */
+export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
+  try {
+    // 获取一页列表
+
+    const now = new Date();
+    let rankDay = format(subDays(now, 1), "yyyyMMdd");
+    let imageList = await PixivDBClient.pixivRankingImage.findMany({
+      where: {
+        rankDate: rankDay,
+        rank: {
+          lte: maxLimit,
+        },
+      },
+    });
+
+    if (imageList.length === 0) {
+      rankDay = format(subDays(now, 2), "yyyyMMdd");
+      imageList = await PixivDBClient.pixivRankingImage.findMany({
+        where: {
+          rankDate: rankDay,
+          rank: {
+            lte: maxLimit,
+          },
+        },
+      });
+    }
+    // 筛选图片列表
+    const filteredImageList = filterImageListFromDB(imageList);
+    console.log(
+      `[PIXIV] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`
+    );
+
+    // 随机选取图片
+    const randomImageIndex = Math.floor(
+      Math.random() * filteredImageList.length
+    ); // 随机选取图片
+    const targetImageItem = filteredImageList[randomImageIndex];
+    const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
+    console.log(
+      `[PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`
+    );
+
+    // 获取原图 url
+    const artworkHtml = await getImageDetailUrl(targetImageItem.illust_id); // 获取网页
+    if (!artworkHtml) {
+      return null;
+    }
+    const artworkContent = await parseArtworkContentToJSON(artworkHtml); // 解析网页内容获取 JSON 对象
+    if (!artworkContent) {
+      return artworkContent;
+    }
+
+    // 获取图片 url
+    const artworkIllustUrls = ObjectGet(
+      artworkContent.illust,
+      targetImageItem.illust_id
+    ) as PixivArtworksIllust;
+    const imageSrc = artworkIllustUrls.urls.regular;
+    let base64 = await getPixivImageToBase64(imageSrc);
+
+    if (!base64) {
+      base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
+    }
+
+    return {
+      title: targetImageItem.title,
+      artist: targetImageItem.user_name,
+      link: artworkUrl,
+      base64,
+    } as PixivImage;
   } catch (error) {
     console.log(error);
     return undefined;

@@ -1,4 +1,7 @@
-import { getRandomImageWithPixiv } from "../pixiv/pixiv";
+import {
+  getRandomImageWithPixiv,
+  getRandomImageWithPixivFromDB,
+} from "../pixiv/pixiv";
 import { getRandomImageWithRSSHub } from "../pixiv/rsshub";
 import { Message, MessageType, sendMessage } from "./../http/http";
 
@@ -9,7 +12,7 @@ import { Message, MessageType, sendMessage } from "./../http/http";
  * @param message 消息
  */
 export async function sendNowTime(targetType: MessageType, targetId: Number) {
-  const randomPixivImage = await getRandomImageWithPixiv("daily", 6);
+  const randomPixivImage = await getRandomImageWithPixivFromDB(300);
 
   const nowTime: Message = [
     {
@@ -36,7 +39,10 @@ export async function sendNowTime(targetType: MessageType, targetId: Number) {
       {
         type: "text",
         data: {
-          text: `\n作品名：${randomPixivImage.title}  画师：${randomPixivImage.artist}  链接：${randomPixivImage.link}`,
+          text: `
+作品名：${randomPixivImage.title}
+画师：${randomPixivImage.artist}
+链接：${randomPixivImage.link}`,
         },
       },
     ];

@@ -1,4 +1,7 @@
-import { getRandomImageWithPixiv } from "../pixiv/pixiv";
+import {
+  getRandomImageWithPixiv,
+  getRandomImageWithPixivFromDB,
+} from "../pixiv/pixiv";
 import { getRandomImageWithRSSHub } from "../pixiv/rsshub";
 import { Message, sendMessage, MessageType } from "./../http/http";
 
@@ -50,7 +53,7 @@ export async function clock(
       },
     ];
 
-    const randomPixivImage = await getRandomImageWithPixiv("daily", 6);
+    const randomPixivImage = await getRandomImageWithPixivFromDB(300);
 
     if (!!randomPixivImage) {
       const randomPixivImageMessage: Message = [
@@ -64,7 +67,10 @@ export async function clock(
         {
           type: "text",
           data: {
-            text: `\n作品名：${randomPixivImage.title}  画师：${randomPixivImage.artist}  链接：${randomPixivImage.link}`,
+            text: `
+作品名：${randomPixivImage.title}
+画师：${randomPixivImage.artist}
+链接：${randomPixivImage.link}`,
           },
         },
       ];

@@ -84,7 +84,7 @@ interface IllustContentType {
   yuri: boolean;
 }
 
-export const TAG_EXCLUDE_FILTER = ["漫画"];
+export const TAG_EXCLUDE_FILTER = ["漫画", "創作BL", "BL"];
 export const TYPE_FILTER: Partial<IllustContentType> = {
   grotesque: false,
   violent: false,
@@ -93,6 +93,7 @@ export const TYPE_FILTER: Partial<IllustContentType> = {
   bl: false,
   furry: false,
 };
+export const ILLUST_TYPE_FILETER = ["1"];
 
 export interface PixivArtworksContent {
   timestamp: string;
@@ -223,7 +224,7 @@ interface PixivArtworksUrls {
   mini: string;
   thumb: string;
   small: string;
-  regualr: string;
+  regular: string;
   original: string;
 }
 
