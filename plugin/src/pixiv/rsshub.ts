@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { PixivImage } from "./pixiv.type";
-import { getPixivImageToBase64 } from "./pixivCat";
+import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
 import { RSSHubPixivRankingDate, RSSHubPixivRankingMode } from "./rsshub.type";
 
 /**
@@ -13,7 +13,7 @@ const RSSHubClient = axios.create({
     host: "127.0.0.1",
     port: 7890,
   },
-  baseURL: "https://rsshub.app/pixiv/ranking",
+  baseURL: "https://rsshub.app",
 });
 
 /**
@@ -27,9 +27,12 @@ export async function getPixivRankListFromRSShub(
   date?: RSSHubPixivRankingDate
 ) {
   try {
-    const response = await RSSHubClient.get(
-      `/${mode}${date ? `/${date}` : ""}`
-    );
+    const response = await RSSHubClient.get("/pixiv/ranking/", {
+      params: {
+        mode,
+        date,
+      },
+    });
 
     // 如果状态码不是200，则返回 undefined
     if (response.status !== 200) return undefined;
@@ -80,7 +83,7 @@ export async function getRandomImageWithRSSHub(
   if (!imgSrc) return undefined;
 
   const imgCatUrl = imgSrc.replace("i.pximg.net", "i.pixiv.cat"); // 对域名进行替换
-  const base64 = await getPixivImageToBase64(imgCatUrl); // 得到 base64 字符串
+  const base64 = await getPixivImageToBase64FromPixivCat(imgCatUrl); // 得到 base64 字符串
 
   return {
     artist,
@@ -88,4 +91,21 @@ export async function getRandomImageWithRSSHub(
     base64,
     title,
   } as PixivImage;
+}
+
+/**
+ * 从 RSSHub 获取特定用户的收藏
+ * @param userId 用户 id, 可在用户主页 URL 中找到
+ * @returns xml 字符串
+ */
+export async function getBookmarksFromRSSHub(userId: number) {
+  try {
+    const response = await RSSHubClient.get(`/pixiv/user/bookmarks/${userId}`);
+    if (response.status !== 200) return null;
+
+    return response.data as string;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }

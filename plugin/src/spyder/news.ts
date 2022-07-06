@@ -5,7 +5,7 @@ const FF14ChineClent = axios.create({
   baseURL: "https://ff.web.sdo.com/inc/newdata.ashx",
   timeout: 5000,
   headers: {
-    userAgent:
+    "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37",
   },
 });
@@ -24,11 +24,14 @@ export async function getNewsList(
   pageIndex: number = 0,
   gameCode: string = "ff"
 ) {
-  const response = await FF14ChineClent.get(
-    `?url=List?gameCode=${gameCode}&category=${categorys.join(
-      ","
-    )}&pageIndex=${pageIndex}&pageSize=${pageSize}`
-  );
+  const response = await FF14ChineClent.get(`?url=List?`, {
+    params: {
+      gameCode,
+      category: categorys.join(","),
+      pageIndex,
+      pageSize,
+    },
+  });
   return response.data as ResponseNewList;
 }
 
@@ -39,9 +42,12 @@ export async function getNewsList(
  * @returns
  */
 export async function getArticle(id: number, gameCode: string = "ff") {
-  const response = await FF14ChineClent.get(
-    `?url=detail?gameCode=${gameCode}&id=${id}`
-  );
+  const response = await FF14ChineClent.get(`?url=detail?`, {
+    params: {
+      gameCode,
+      id,
+    },
+  });
 
   return response.data as ResponseArticle;
 }
