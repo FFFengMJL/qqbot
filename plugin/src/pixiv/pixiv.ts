@@ -8,24 +8,25 @@ import {
   TAG_EXCLUDE_FILTER,
   TYPE_FILTER,
 } from "./pixiv.type";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import * as cheerio from "cheerio";
-import { getPixivImageToBase64 } from "./pixivCat";
 import { get as ObjectGet } from "lodash";
+import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
 
 /**
  * 用于与 pixiv.net 进行请求
  */
 const PixivClient = axios.create({
   headers: {
-    userAgent:
+    "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37",
+    Referer: "https://www.pixiv.net",
   },
   proxy: {
     host: "127.0.0.1",
     port: 7890,
   },
-  timeout: 5000,
+  timeout: 20000,
   baseURL: "https://www.pixiv.net",
 });
 
@@ -81,7 +82,7 @@ export async function getRandomImageWithPixivByHtml() {
   const src = targetItem
     .find("img")
     .attr("data-src")
-    ?.replace("i.pximg.net/c/240x480/img-master", "i.pixiv.cat/img-original")
+    ?.replace("i.pximg.net/c/240x480/img-master", "i.pximg.net/img-original")
     .replace("_master1200", ""); // 作品链接（这个获取获取方式是错的）
 
   if (!artist || !title || !artworkId || !src) {
@@ -91,7 +92,7 @@ export async function getRandomImageWithPixivByHtml() {
 
   const link = `https://www.pixiv.net/artworks/${artworkId}`;
 
-  const base64 = await getPixivImageToBase64(src);
+  const base64 = await getPixivImageToBase64FromPixivCat(src);
 
   return {
     artist,
@@ -101,7 +102,6 @@ export async function getRandomImageWithPixivByHtml() {
   } as PixivImage;
 }
 
-// TODO
 /**
  * 使用 pixiv.net 的 api 获取对应的列表
  * @param mode 榜单类型，默认日榜
@@ -115,9 +115,18 @@ export async function getRankingListFromPixiv(
 ) {
   try {
     console.log(`[PIXIV] mode[${mode}] page[${page}]${date ? ` ${date}` : ""}`);
-    const response = await PixivClient.get(
-      `/ranking.php?mode=${mode}&p=${page}${date ? `&${date}` : ""}&format=json`
-    ); // 获取响应
+    const response = await PixivClient.get(`/ranking.php`, {
+      params: {
+        mode,
+        p: page,
+        date,
+        format: "json",
+      },
+    }); // 获取响应
+
+    // const response = await PixivClient.get(
+    //   `/ranking.php?mode=${mode}&p=${page}${date ? `&${date}` : ""}&format=json`
+    // ); // 获取响应
 
     if (response.status !== 200) {
       return null;
@@ -146,8 +155,22 @@ export async function getImageDetailUrl(illustId: number) {
     }
 
     return response.data as string;
-  } catch (error) {
-    console.log(error);
+  } catch (error: any) {
+    if (error.response) {
+      // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
+      console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+    } else if (error.request) {
+      // 请求已经成功发起，但没有收到响应
+      // `error.request` 在浏览器中是 XMLHttpRequest 的实例，
+      // 而在node.js中是 http.ClientRequest 的实例
+      console.log(error.request);
+    } else {
+      // 发送请求时出了点问题
+      console.log("Error", error.message);
+    }
+    console.log(error.config);
     return undefined;
   }
 }
@@ -226,9 +249,12 @@ export async function getRandomImageWithPixiv(
     artworkContent.illust,
     targetImageItem.illust_id
   ) as PixivArtworksIllust;
-  const orignalImageUrl = artworkIllustUrls.urls.original;
-  const imageSrc = orignalImageUrl.replace("i.pximg.net", "i.pixiv.cat");
-  const base64 = await getPixivImageToBase64(imageSrc);
+  const imageSrc = artworkIllustUrls.urls.original;
+  let base64 = await getPixivImageToBase64(imageSrc);
+
+  if (!base64) {
+    base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
+  }
 
   return {
     title: targetImageItem.title,
@@ -254,4 +280,31 @@ export function filterImageList(imageList: Array<PixivRankingImageItem>) {
     // console.log(tagCheck, typeCheck);
     return tagCheck && typeCheck;
   });
+}
+
+/**
+ * 通过 url 获取图片并转换成 base64 字符串
+ * @param url 图片的 url，以 https://i.pximg.net 域名开头
+ * @returns
+ */
+export async function getPixivImageToBase64(url: string) {
+  try {
+    console.log(`[PIXIV] url: ${url}`);
+    const fileResponse = await PixivClient.get(url, {
+      responseType: "arraybuffer",
+    });
+    console.log(
+      `[PIXIV] i.pximg.net response: ${fileResponse.status} ${fileResponse.data.length}`
+    );
+    if (fileResponse.status !== 200) {
+      return undefined;
+    }
+
+    return `base64://${Buffer.from(fileResponse.data, "binary").toString(
+      "base64"
+    )}`;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }

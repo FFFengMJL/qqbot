@@ -11,7 +11,7 @@ import {
 } from "./pixivic.type";
 import { format, subDays } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import { getPixivImageToBase64 } from "./pixivCat";
+import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
 
 /**
  * 与镜像站的链接
@@ -20,7 +20,7 @@ const pixivic = axios.create({
   headers: {
     referer: "https://pixivic.com",
     origin: "https://pixivic.com",
-    userAgent:
+    "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37",
   },
   baseURL: "https://pix.ipv4.host/ranks",
@@ -45,9 +45,14 @@ export async function getListFromPixivic({
     `[PIXIV] getImageList\n\tdate: ${date}\n\tmode: ${mode}\n\tpageSize: ${pageSize}\n\tpage: ${page}`
   );
 
-  const response = await pixivic.get(
-    `?page=${page}&date=${date}&mode=${mode}&pageSize=${pageSize}`
-  );
+  const response = await pixivic.get(``, {
+    params: {
+      page,
+      date,
+      mode,
+      pageSize,
+    },
+  });
 
   return response.data as PixvicListResponse;
 }
@@ -75,9 +80,8 @@ export async function getRandomPixivicImage(imageList: Array<PixivicListItem>) {
 
     const originUrl = imageList[index].imageUrls[0].original;
     // console.log(index, imageList[index]);
-    const targetUrl = originUrl.replace("i.pximg.net", "i.pixiv.cat");
 
-    return await getPixivImageToBase64(targetUrl);
+    return await getPixivImageToBase64FromPixivCat(originUrl);
   } catch (error) {
     console.log(error);
     return;

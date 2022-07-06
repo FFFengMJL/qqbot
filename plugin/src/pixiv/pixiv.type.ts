@@ -85,15 +85,14 @@ interface IllustContentType {
 }
 
 export const TAG_EXCLUDE_FILTER = ["漫画"];
-export const TYPE_FILTER: Pick<
-  IllustContentType,
-  "grotesque" | "violent" | "antisocial" | "drug"
-> = {
+export const TYPE_FILTER: Partial<IllustContentType> = {
   grotesque: false,
   violent: false,
   drug: false,
   antisocial: false,
-} as const;
+  bl: false,
+  furry: false,
+};
 
 export interface PixivArtworksContent {
   timestamp: string;
