@@ -1,5 +1,5 @@
 import { Message, MessageType, sendMessage } from "../http/http";
-import { getCurrentlyShownById, WorldOrDC } from "./universalis";
+import { getCurrentlyShownById, isWorldOrDC, WorldOrDC } from "./universalis";
 import { searchTradableItemFromXIVAPIByName } from "./xivapi";
 export async function getPrice(
   targetType: MessageType,
@@ -110,5 +110,26 @@ export async function getPrice(
     }
   } catch (err) {
     console.log(err);
+  }
+}
+
+export function price(
+  messageList: Array<String>,
+  targetType: MessageType,
+  targetId: Number
+) {
+  if (messageList.length < 2) {
+    sendMessage(
+      targetType,
+      targetId,
+      "/price 物品名 大区/服务器完整名称（默认猫区）",
+      false
+    );
+  } else if (messageList.length == 2) {
+    getPrice(targetType, targetId, messageList[1]);
+  } else if (messageList.length >= 3 && !isWorldOrDC(messageList[2])) {
+    sendMessage(targetType, targetId, `不存在 ${messageList[2]} 大区`, false);
+  } else {
+    getPrice(targetType, targetId, messageList[1], messageList[2] as WorldOrDC);
   }
 }
