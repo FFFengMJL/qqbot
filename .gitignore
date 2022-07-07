@@ -16,3 +16,6 @@ device.json.bak
 session.token
 
 /prisma
+
+!/prisma/schema.prisma
+!/prisma/.env
