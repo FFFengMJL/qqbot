@@ -17,5 +17,5 @@ session.token
 
 /prisma
 
-!/prisma/schema.prisma
-!/prisma/.env
+!prisma/schema.prisma
+!prisma/.env
