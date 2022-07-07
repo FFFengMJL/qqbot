@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model News {
+  Id              Int      @id @unique // 文章 ID
+  Articletype     Int? // 文章类型
+  ApplicationCode Int?
+  CategoryCode    Int? // 分类
+  SortIndex       Int? // 排序索引
+  GroupIndex      Int?
+  TitleClass      String?  @default("")
+  Title           String
+  Summary         String
+  Author          String
+  PublishDate     DateTime
+  OutLink         String   @default("")
+  HomeImagePath   String
+}
+
+model PixivArtwork {
+  illustId     Int      @id @unique
+  illustTitle  String
+  userId       String
+  userName     String
+  createDate   DateTime
+  uploadDate   DateTime
+  url_mini     String
+  url_thumb    String
+  url_small    String
+  url_regular  String
+  url_original String
+}
+
+model PixivRankingImage {
+  illust_id   Int     @id @unique // 作品 ID
+  illust_type String  @default("0") // 作品类型 "1" 是漫画
+  title       String // 作品名
+  user_id     Int
+  user_name   String
+  date        String
+  tags        String
+  sexual      Int // 性暗示 0|1
+  lo          Boolean // 萝莉？
+  grotesque   Boolean // 猎奇
+  violent     Boolean // 暴力
+  homosexual  Boolean // 同性？
+  drug        Boolean // 毒品/药
+  thoughts    Boolean // ？
+  antisocial  Boolean // 反社会
+  religion    Boolean // 区域？
+  original    Boolean // 原创
+  furry       Boolean // 福瑞
+  bl          Boolean // boys love
+  yuri        Boolean // 百合
+  rankDate    String // yyyy-MM-dd
+  rank        Int
+}
+
+model RSSHubPixivBookmarkIllust {
+  illustId    Int      @id @unique
+  title       String
+  author      String
+  description String   @default("")
+  pubDate     DateTime
+  link        String
+}
