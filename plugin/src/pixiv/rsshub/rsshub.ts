@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { PixivImage } from "./pixiv.type";
-import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
+import { PixivImage } from "../pixiv.type";
+import { getPixivImageToBase64FromPixivCat } from "../pixivCat";
 import { RSSHubPixivRankingDate, RSSHubPixivRankingMode } from "./rsshub.type";
 
 /**

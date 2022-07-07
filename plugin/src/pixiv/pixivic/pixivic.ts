@@ -11,7 +11,7 @@ import {
 } from "./pixivic.type";
 import { format, subDays } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
+import { getPixivImageToBase64FromPixivCat } from "../pixivCat";
 
 /**
  * 与镜像站的链接
