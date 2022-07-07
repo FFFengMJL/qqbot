@@ -101,6 +101,19 @@ export interface PixivArtworksContent {
   user: Object;
 }
 
+export interface PixivArtworksIllustBasic {
+  illustId: string;
+  illustTitle: string;
+
+  userId: string;
+  userName: string;
+
+  createDate: string;
+  uploadDate: string;
+
+  urls: PixivArtworksUrls;
+}
+
 /**
  * pixiv.net/artworks/xxx 页面的作品字段
  */

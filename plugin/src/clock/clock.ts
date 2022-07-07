@@ -1,16 +1,12 @@
-import {
-  getRandomImageWithPixiv,
-  getRandomImageWithPixivFromDB,
-} from "../pixiv/pixiv";
-import { getRandomImageWithRSSHub } from "../pixiv/rsshub";
+import { getRandomImageWithPixivFromDB } from "../pixiv/pixiv";
 import { Message, sendMessage, MessageType } from "./../http/http";
 
 /**
  * 整点报时闹钟
- * @param {number} startTime
- * @param {number} timeInterval
- * @param {number} targetType
- * @param {number} targetId
+ * @param {number} startTime 开始时间
+ * @param {number} hourInterval 间隔时间
+ * @param {number} targetType 目标类型（群聊/私聊）
+ * @param {number} targetId 目标 ID
  */
 export function initClock(
   startTime = 0,
@@ -29,7 +25,7 @@ Set a Clock: startTime - ${startTime}
 
 export async function clock(
   startTime = 0,
-  timeInterval = 3,
+  hourInterval = 3,
   targetType: MessageType = "group",
   targetId: Number
 ) {
@@ -38,7 +34,7 @@ export async function clock(
     now.getMilliseconds() < 100 &&
     now.getSeconds() == 0 &&
     now.getMinutes() == 0 &&
-    now.getHours() % timeInterval == startTime
+    now.getHours() % hourInterval == startTime
   ) {
     const postMessage: Message = [
       {

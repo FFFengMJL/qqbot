@@ -1,4 +1,5 @@
 import axios, { AxiosResponse } from "axios";
+import { format } from "date-fns";
 
 /**
  * 与图片反代的链接，需要代理
@@ -33,6 +34,13 @@ export async function getPixivImageToBase64FromPixivCat(url: string) {
     if (fileResponse.status !== 200) {
       return undefined;
     }
+
+    console.log(
+      `[PIXIV] [BASE64] start [${format(
+        new Date(),
+        "yyyy-MM-dd HH:mm:ss:SSS"
+      )}]`
+    );
 
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
       "base64"

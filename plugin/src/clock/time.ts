@@ -1,8 +1,4 @@
-import {
-  getRandomImageWithPixiv,
-  getRandomImageWithPixivFromDB,
-} from "../pixiv/pixiv";
-import { getRandomImageWithRSSHub } from "../pixiv/rsshub";
+import { getRandomImageWithPixivFromDB } from "../pixiv/pixiv";
 import { Message, MessageType, sendMessage } from "./../http/http";
 
 /**

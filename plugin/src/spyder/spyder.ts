@@ -1,3 +1,4 @@
+import { RSSHubPixivBookmarkIllust } from "@prisma/client";
 import { zhCN } from "date-fns/locale";
 import { format } from "date-fns-tz";
 import { MessageType, Message, sendMessage } from "./../http/http";
@@ -12,9 +13,15 @@ import { SpyTime } from "./spyder.type";
 import { PixivNormalRankingMode } from "../pixiv/pixiv.type";
 import {
   getRankingListFromPixiv,
-  isPixivRankingImageItemInDB,
+  isPixivRankingImageItemExistInDB,
   upsertImageRankingItem,
 } from "../pixiv/pixiv";
+import {
+  createBookmarkItemInDB,
+  getBookmarksFromRSSHub,
+  isBookmarkItemExistinDB,
+  parseRSSHubPixivBookmarkXML,
+} from "../pixiv/rsshub/rsshub";
 
 /**
  * 进行一次完整的流程：获取官网数据 -> 对比是否存在新消息 -> 发送新消息
@@ -76,16 +83,12 @@ export async function initFF14Spyder(
   setInterval(async () => {
     if (checkTime(new Date(), spyTime)) {
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss", {
-          locale: zhCN,
-        })}] [SPYDER] [FF14] start`
+        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [FF14] start`
       );
 
       await spyFF14(messageType, targetId);
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss", {
-          locale: zhCN,
-        })}] [SPYDER] [FF14] end`
+        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [FF14] end`
       );
     }
   }, spyTime.second * 1000);
@@ -131,56 +134,63 @@ export async function sendNews(
  */
 function checkTime(now: Date, spyTime: SpyTime) {
   const secondOK = now.getSeconds() <= spyTime.second;
-  const minuteIntervalOK = now.getMinutes() % spyTime.minuteInterval === 0;
+  const minuteOK = !spyTime.minute || now.getMinutes() <= spyTime.minute;
+  const minuteIntervalOK =
+    !spyTime.minuteInterval || now.getMinutes() % spyTime.minuteInterval === 0;
   const hourIntervalOK =
-    !spyTime.hourInterval ||
-    (spyTime.hourInterval && now.getHours() % spyTime?.hourInterval === 0);
-  const startHourOK =
-    !spyTime.startHour ||
-    (spyTime.startHour && now.getHours() >= spyTime.startHour);
-  const endHourOK =
-    !spyTime.endHour || (spyTime.endHour && now.getHours() <= spyTime.endHour);
+    !spyTime.hourInterval || now.getHours() % spyTime.hourInterval === 0;
+  const startHourOK = !spyTime.startHour || now.getHours() >= spyTime.startHour;
+  const endHourOK = !spyTime.endHour || now.getHours() <= spyTime.endHour;
   return (
-    secondOK && minuteIntervalOK && hourIntervalOK && startHourOK && endHourOK
+    secondOK &&
+    minuteOK &&
+    minuteIntervalOK &&
+    hourIntervalOK &&
+    startHourOK &&
+    endHourOK
   );
 }
 
 /**
- * 初始化 pixiv 榜单爬虫
- * @param mode 榜单类型
- * @param maxPage 最大页数 [1, 10]
- * @param spyTime 目标时间
+ * 初始化 pixiv 日榜爬虫
+ * @param mode 榜单模式
+ * @param maxPage 最大页数（总共50 * 10页 500 张图）
+ * @param minutesLess 小于这个数值则进行一次爬取
+ * @param hour 进行爬取的小时时间
+ * @param intervalMS setInterval 的时间，即间隔多少 ms 进行一次时间检查
  */
 export async function initPixivRankingSpyder(
   mode: PixivNormalRankingMode = "daily",
   maxPage: number = 10,
-  spyTime: SpyTime = {
-    second: 60,
-    minuteInterval: 30,
-    hourInterval: 11,
-    startHour: 10,
-    endHour: 12,
-  }
+  minutesLess = 20,
+  hour = 11,
+  intervalMS = 60 * 1000 * 10
 ) {
   setInterval(async () => {
-    if (checkTime(new Date(), spyTime)) {
+    const now = new Date();
+    const minutesOK = now.getMinutes() <= minutesLess;
+    const hourOK = now.getHours() == hour;
+
+    if (minutesOK && hourOK) {
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss", {
-          locale: zhCN,
-        })}] [SPYDER] [PIXIV] start`
+        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [PIXIV] start`
       );
 
       spyPixivRanking(mode, maxPage);
 
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss", {
-          locale: zhCN,
-        })}] [SPYDER] [PIXIV] end`
+        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [PIXIV] end`
       );
     }
-  }, spyTime.second * 1000 * 10); // 10 分钟检查一次
+  }, intervalMS); // 1 分钟检查一次
 }
 
+/**
+ * 对 pixiv.net 的榜单进行一次获取
+ * @param mode 榜单类型
+ * @param maxPage 最大页数 [1, 10]
+ * @returns
+ */
 export async function spyPixivRanking(
   mode: PixivNormalRankingMode = "daily",
   maxPage: number = 10
@@ -193,25 +203,114 @@ export async function spyPixivRanking(
       const imageItems = response.contents;
       rankingLength += imageItems.length;
       for (let imageIndex = 0; imageIndex < imageItems.length; imageIndex++) {
+        const isExist = await isPixivRankingImageItemExistInDB(
+          imageItems[imageIndex],
+          response.date
+        );
+
         if (
-          await upsertImageRankingItem(imageItems[imageIndex], response.date)
+          !isExist &&
+          (await upsertImageRankingItem(imageItems[imageIndex], response.date))
         ) {
           upsertItemLength++; // 创建/更新成功
         }
       }
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss", {
-          locale: zhCN,
-        })} [PIXIV] currentPage [${page}] content lenth [${imageItems.length}]`
+        `[${format(
+          new Date(),
+          "yyyy-MM-dd HH:mm:ss"
+        )} [PIXIV] currentPage [${page}] content lenth [${imageItems.length}]`
       );
     }
   }
 
   console.log(
-    `[${format(new Date(), "yyyy-MM-dd HH:mm:ss", {
-      locale: zhCN,
-    })}] [SPYDER] [PIXIV] total [${rankingLength}] image, upsert [${upsertItemLength}] in DB`
+    `[${format(
+      new Date(),
+      "yyyy-MM-dd HH:mm:ss"
+    )}] [SPYDER] [PIXIV] total [${rankingLength}] image, upsert [${upsertItemLength}] in DB`
   );
 
   return upsertItemLength;
+}
+
+export async function spyRSSHubPixivBookmark(
+  userId: number,
+  targetList: Array<{ messageType: MessageType; targetId: Number }>
+) {
+  // 从 RSSHub 获取 xml
+  console.log(`[SPYDER] [RSSHUB] get xml`);
+  const xmlString = await getBookmarksFromRSSHub(userId);
+  if (!xmlString) {
+    return xmlString;
+  }
+
+  // 解析 xml 成对应的数组
+  console.log(`[SPYDER] [RSSHUB] parse xml`);
+  const items = parseRSSHubPixivBookmarkXML(xmlString);
+  console.log(`[SPYDER] [RSSHUB] get [${items.length}] items`);
+
+  const newItems: Array<RSSHubPixivBookmarkIllust> = [];
+
+  for (const item of items) {
+    if (
+      !(await isBookmarkItemExistinDB(item)) &&
+      (await createBookmarkItemInDB(item))
+    ) {
+      // 当收藏不在数据库并创建成功后，加入到结果数组中
+      newItems.push(item);
+    }
+  }
+
+  // 当新增数量不为 0 时才进行消息发送
+  if (newItems.length) {
+    targetList.forEach(async ({ messageType, targetId }) => {
+      await sendNewPixivBookmarks(newItems, messageType, targetId);
+    });
+  }
+
+  console.log(`[SPYDER] [RSSHUB] get [${newItems.length}] new items`);
+  return newItems.length;
+}
+
+export async function sendNewPixivBookmarks(
+  items: Array<RSSHubPixivBookmarkIllust>,
+  messageType: MessageType,
+  targetId: Number
+) {
+  const combineString = items
+    .map((item) => `${item.title}\t作者：${item.author}\n${item.link}`)
+    .join("\n");
+  const messages: Message = [
+    {
+      type: "text",
+      data: {
+        text: `今日推荐：
+${combineString}`,
+      },
+    },
+  ];
+
+  return await sendMessage(messageType, targetId, messages);
+}
+
+export async function initRSSHubPixivBookmarkSpyder(
+  userId: number,
+  targetList: Array<{ messageType: MessageType; targetId: Number }>
+) {
+  setInterval(async () => {
+    console.log(
+      `[${format(
+        new Date(),
+        "yyyy-MM-dd HH:mm:ss"
+      )}] [SPYDER] [RSSHUB] pixivBookmark start`
+    );
+    await spyRSSHubPixivBookmark(userId, targetList);
+    console.log(
+      `[${format(
+        new Date(),
+        "yyyy-MM-dd HH:mm:ss"
+      )}][SPYDER] [RSSHUB] pixivBookmark end`
+    );
+  }, 30 * 60 * 1000);
 }

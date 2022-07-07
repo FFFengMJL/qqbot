@@ -1,9 +1,10 @@
 import { subDays } from "date-fns";
-import { format } from "date-fns-tz";
+import { format, utcToZonedTime } from "date-fns-tz";
 import {
   ILLUST_TYPE_FILETER,
   PixivArtworksContent,
   PixivArtworksIllust,
+  PixivArtworksIllustBasic,
   PixivImage,
   PixivNormalRankingMode,
   PixivRankingImageItem,
@@ -35,7 +36,7 @@ const PixivClient = axios.create({
     host: "127.0.0.1",
     port: 7890,
   },
-  timeout: 20000,
+  timeout: 10000,
   baseURL: "https://www.pixiv.net",
 });
 
@@ -153,7 +154,7 @@ export async function getRankingListFromPixiv(
  * @param illustId 作品 id
  * @returns
  */
-export async function getImageDetailUrl(illustId: number) {
+export async function getImageArtworkHtml(illustId: number) {
   try {
     console.log(`[PIXIV] [GET] /artworks/${illustId}`);
     const response = await PixivClient.get(`/artworks/${illustId}`);
@@ -244,7 +245,7 @@ export async function getRandomImageWithPixiv(
   );
 
   // 获取原图 url
-  const artworkHtml = await getImageDetailUrl(targetImageItem.illust_id); // 获取网页
+  const artworkHtml = await getImageArtworkHtml(targetImageItem.illust_id); // 获取网页
   if (!artworkHtml) {
     return null;
   }
@@ -320,16 +321,27 @@ export function filterImageListFromDB(imageList: Array<PixivRankingImage>) {
  */
 export async function getPixivImageToBase64(url: string) {
   try {
-    console.log(`[PIXIV] url: ${url}`);
+    console.log(
+      `[PIXIV] url: ${url} [${format(new Date(), "yyyy-MM-dd HH:mm:ss:SSS")}]`
+    );
     const fileResponse = await PixivClient.get(url, {
       responseType: "arraybuffer",
     });
     console.log(
-      `[PIXIV] i.pximg.net response: ${fileResponse.status} ${fileResponse.data.length}`
+      `[PIXIV] i.pximg.net response: ${fileResponse.status} ${
+        fileResponse.data.length
+      } [${format(new Date(), "yyyy-MM-dd HH:mm:ss:SSS")}]`
     );
     if (fileResponse.status !== 200) {
       return undefined;
     }
+
+    console.log(
+      `[PIXIV] [BASE64] start [${format(
+        new Date(),
+        "yyyy-MM-dd HH:mm:ss:SSS"
+      )}]`
+    );
 
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
       "base64"
@@ -437,7 +449,7 @@ export async function upsertImageRankingItem(
  * @param rankDate 日榜日期
  * @returns
  */
-export async function isPixivRankingImageItemInDB(
+export async function isPixivRankingImageItemExistInDB(
   imageItem: PixivRankingImageItem,
   rankDate: string
 ) {
@@ -459,7 +471,7 @@ export async function isPixivRankingImageItemInDB(
 
 /**
  * 从数据库中获取当天日榜随机图片
- * @param maxLimit
+ * @param maxLimit 最大排名
  * @returns
  */
 export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
@@ -491,7 +503,12 @@ export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
     // 筛选图片列表
     const filteredImageList = filterImageListFromDB(imageList);
     console.log(
-      `[PIXIV] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`
+      `[PIXIV] [DB:PixivRankingImage] imageListLength[${
+        imageList.length
+      }] filteredImageListLength[${filteredImageList.length}] [${format(
+        new Date(),
+        "yyyy-MM-dd HH:mm:ss:SSS"
+      )}]`
     );
 
     // 随机选取图片
@@ -504,23 +521,18 @@ export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
       `[PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`
     );
 
-    // 获取原图 url
-    const artworkHtml = await getImageDetailUrl(targetImageItem.illust_id); // 获取网页
-    if (!artworkHtml) {
-      return null;
-    }
-    const artworkContent = await parseArtworkContentToJSON(artworkHtml); // 解析网页内容获取 JSON 对象
-    if (!artworkContent) {
-      return artworkContent;
+    const targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
+
+    if (!targetArtwork) {
+      return targetArtwork;
     }
 
     // 获取图片 url
-    const artworkIllustUrls = ObjectGet(
-      artworkContent.illust,
-      targetImageItem.illust_id
-    ) as PixivArtworksIllust;
-    const imageSrc = artworkIllustUrls.urls.regular;
+    const imageSrc = targetArtwork.urls.regular;
     let base64 = await getPixivImageToBase64(imageSrc);
+    console.log(
+      `[PIXIV] [BASE64] end [${format(new Date(), "yyyy-MM-dd HH:mm:ss:SSS")}]`
+    );
 
     if (!base64) {
       base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
@@ -536,4 +548,82 @@ export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
     console.log(error);
     return undefined;
   }
+}
+
+/**
+ * 从数据库或 pixiv 获取图片 url
+ * @param illustId 作品 ID
+ * @returns
+ */
+export async function getArtworkFromPixiv(illustId: number) {
+  try {
+    const pixivArtwork = await PixivDBClient.pixivArtwork.findUnique({
+      where: {
+        illustId,
+      },
+    });
+
+    if (pixivArtwork) {
+      const createDate = getUTC0TimeString(pixivArtwork.createDate);
+      const uploadDate = getUTC0TimeString(pixivArtwork.uploadDate);
+      return {
+        illustId: String(pixivArtwork.illustId),
+        illustTitle: pixivArtwork.illustTitle,
+        userId: pixivArtwork.userId,
+        userName: pixivArtwork.userName,
+        createDate,
+        uploadDate,
+        urls: {
+          thumb: pixivArtwork.url_thumb,
+          mini: pixivArtwork.url_mini,
+          small: pixivArtwork.url_small,
+          regular: pixivArtwork.url_regular,
+          original: pixivArtwork.url_original,
+        },
+      } as PixivArtworksIllustBasic;
+    }
+
+    const response = await getImageArtworkHtml(illustId);
+    if (!response) {
+      return null;
+    }
+    const root = parseArtworkContentToJSON(response);
+    if (!root) {
+      return root;
+    }
+
+    const artwork = ObjectGet(
+      root.illust,
+      illustId
+    ) as PixivArtworksIllustBasic;
+
+    PixivDBClient.pixivArtwork
+      .create({
+        data: {
+          illustId: Number(artwork.illustId),
+          illustTitle: artwork.illustTitle,
+          userId: artwork.userId,
+          userName: artwork.userName,
+          createDate: new Date(artwork.createDate),
+          uploadDate: new Date(artwork.uploadDate),
+          url_mini: artwork.urls.mini,
+          url_thumb: artwork.urls.thumb,
+          url_small: artwork.urls.small,
+          url_regular: artwork.urls.regular,
+          url_original: artwork.urls.original,
+        },
+      })
+      .then((artwork) => {
+        console.log(`[PIXIV] [DB:Artwork] create`, artwork.illustId);
+      });
+
+    return artwork;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+}
+
+export function getUTC0TimeString(date: Date) {
+  return format(utcToZonedTime(date, "UTC"), "yyyy-MM-dd'T'HH:mm:ssxxx");
 }
