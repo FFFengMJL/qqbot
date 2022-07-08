@@ -29,7 +29,9 @@ import {
  * @param targetId
  * @returns
  */
-export async function spyFF14(messageType: MessageType, targetId: Number) {
+export async function spyFF14(
+  targetList: Array<{ messageType: MessageType; targetId: Number }>
+) {
   try {
     const currentNews = (await getNewsList()).Data;
     const unaddedNew: Array<New> = [];
@@ -42,7 +44,9 @@ export async function spyFF14(messageType: MessageType, targetId: Number) {
       // 新闻不存在，也没有报错的情况
       if (!isExist) {
         unaddedNew.push(item);
-        sendNews(messageType, targetId, item);
+        targetList.forEach(async ({ messageType, targetId }) => {
+          await sendNews(messageType, targetId, item);
+        });
       }
     }
 
@@ -73,8 +77,7 @@ export async function spyFF14(messageType: MessageType, targetId: Number) {
  * @param spyTime 间隔时间
  */
 export async function initFF14Spyder(
-  messageType: MessageType,
-  targetId: Number,
+  targetList: Array<{ messageType: MessageType; targetId: Number }>,
   spyTime: SpyTime = {
     second: 10,
     minuteInterval: 5,
@@ -86,7 +89,7 @@ export async function initFF14Spyder(
         `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [FF14] start`
       );
 
-      await spyFF14(messageType, targetId);
+      await spyFF14(targetList);
       console.log(
         `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [FF14] end`
       );
@@ -116,7 +119,8 @@ export async function sendNews(
     {
       type: "text",
       data: {
-        text: `标题：${news.Title}
+        text: `
+标题：${news.Title}
 摘要：${news.Summary}
 详情：${news.Author}
 发布日期：${news.PublishDate}`,
@@ -182,7 +186,7 @@ export async function initPixivRankingSpyder(
         `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [PIXIV] end`
       );
     }
-  }, intervalMS); // 1 分钟检查一次
+  }, intervalMS); // 10 分钟检查一次
 }
 
 /**
@@ -278,17 +282,24 @@ export async function sendNewPixivBookmarks(
   messageType: MessageType,
   targetId: Number
 ) {
-  const combineString = items
-    .map((item) => `${item.title}\t作者：${item.author}\n${item.link}`)
-    .join("\n");
+  const combineMessage: Message = items.map((item) => {
+    return {
+      type: "text",
+      data: {
+        text: `
+${item.title}\t作者：${item.author}
+${item.link}`,
+      },
+    };
+  });
   const messages: Message = [
     {
       type: "text",
       data: {
-        text: `今日推荐：
-${combineString}`,
+        text: `今日推荐：`,
       },
     },
+    ...combineMessage,
   ];
 
   return await sendMessage(messageType, targetId, messages);

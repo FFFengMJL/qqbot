@@ -6,6 +6,7 @@ import { RSSHubPixivRankingDate, RSSHubPixivRankingMode } from "./rsshub.type";
 import { PrismaClient, RSSHubPixivBookmarkIllust } from "@prisma/client";
 import { load } from "cheerio";
 import { isEqual } from "date-fns";
+import { logError } from "../../utils/error";
 
 /**
  * 对 rsshub 的连接，用户获取 pixiv 榜单
@@ -47,22 +48,7 @@ export async function getPixivRankListFromRSShub(
     if (response.status !== 200) return undefined;
     return response.data as string;
   } catch (error: any) {
-    if (error.response) {
-      // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
-    } else if (error.request) {
-      // 请求已经成功发起，但没有收到响应
-      // `error.request` 在浏览器中是 XMLHttpRequest 的实例，
-      // 而在node.js中是 http.ClientRequest 的实例
-      console.log(error.request);
-    } else {
-      // 发送请求时出了点问题
-      console.log("Error", error.message);
-    }
-    console.log(error.config);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -128,22 +114,7 @@ export async function getBookmarksFromRSSHub(userId: number) {
 
     return response.data as string;
   } catch (error: any) {
-    if (error.response) {
-      // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
-      // console.log(error.response.data);
-      console.log("[ERROR] response status", error.response.status);
-      console.log("[ERROR] response headers", error.response.headers);
-    } else if (error.request) {
-      // 请求已经成功发起，但没有收到响应
-      // `error.request` 在浏览器中是 XMLHttpRequest 的实例，
-      // 而在node.js中是 http.ClientRequest 的实例
-      console.log("[ERROR] request ", error.request);
-    } else {
-      // 发送请求时出了点问题
-      console.log("[Error] message", error.message);
-    }
-    console.log("[ERROR] config", error.config);
-    return undefined;
+    return logError(error);
   }
 }
 

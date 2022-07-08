@@ -17,6 +17,7 @@ import * as cheerio from "cheerio";
 import { get as ObjectGet } from "lodash";
 import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
 import { PixivRankingImage, PrismaClient } from "@prisma/client";
+import { logError } from "../utils/error";
 
 const PixivDBClient = {
   pixivRankingImage: new PrismaClient().pixivRankingImage,
@@ -166,22 +167,10 @@ export async function getImageArtworkHtml(illustId: number) {
 
     return response.data as string;
   } catch (error: any) {
-    if (error.response) {
-      // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
-    } else if (error.request) {
-      // 请求已经成功发起，但没有收到响应
-      // `error.request` 在浏览器中是 XMLHttpRequest 的实例，
-      // 而在node.js中是 http.ClientRequest 的实例
-      console.log(error.request);
-    } else {
-      // 发送请求时出了点问题
-      console.log("Error", error.message);
+    if (error.status == 404) {
+      await deletePixivRankingItem(illustId);
     }
-    console.log(error.config);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -347,23 +336,7 @@ export async function getPixivImageToBase64(url: string) {
       "base64"
     )}`;
   } catch (error: any) {
-    if (error.response) {
-      // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
-    } else if (error.request) {
-      // 请求已经成功发起，但没有收到响应
-      // `error.request` 在浏览器中是 XMLHttpRequest 的实例，
-      // 而在node.js中是 http.ClientRequest 的实例
-      console.log(error.request);
-    } else {
-      // 发送请求时出了点问题
-      console.log("Error", error.message);
-    }
-    console.log(error.config);
-
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -626,4 +599,23 @@ export async function getArtworkFromPixiv(illustId: number) {
 
 export function getUTC0TimeString(date: Date) {
   return format(utcToZonedTime(date, "UTC"), "yyyy-MM-dd'T'HH:mm:ssxxx");
+}
+
+/**
+ * 从数据库中删除某个日榜图片
+ * @param illustId 作品 ID
+ * @returns
+ */
+export async function deletePixivRankingItem(illustId: number) {
+  try {
+    const item = await PixivDBClient.pixivRankingImage.delete({
+      where: {
+        illust_id: illustId,
+      },
+    });
+    return item;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }
