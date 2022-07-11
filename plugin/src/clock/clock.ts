@@ -1,5 +1,11 @@
-import { getRandomImageWithPixivFromDB } from "../pixiv/pixiv";
-import { Message, sendMessage, MessageType } from "./../http/http";
+import { format } from "date-fns";
+import { getRandomImageWithPixivFromDB_V2 } from "../pixiv/pixiv";
+import {
+  Message,
+  sendMessage,
+  MessageType,
+  MessageResponse,
+} from "./../http/http";
 
 /**
  * 整点报时闹钟
@@ -11,27 +17,24 @@ import { Message, sendMessage, MessageType } from "./../http/http";
 export function initClock(
   startTime = 0,
   hourInterval = 3,
-  targetType: MessageType = "group",
-  targetId: Number
+  targetList: Array<{ targetType: MessageType; targetId: Number }>
 ) {
-  setInterval(() => clock(startTime, hourInterval, targetType, targetId), 100);
+  setInterval(() => clock(startTime, hourInterval, targetList), 100);
   console.log(`\
-Set a Clock: startTime - ${startTime}
-             hourInterval - ${hourInterval}
-             targetType - ${targetType}
-             targetId - ${targetId}`);
+Set a Clock:
+startTime - ${startTime} hourInterval - ${hourInterval}
+targetList: ${targetList}`);
   return 1;
 }
 
 export async function clock(
   startTime = 0,
   hourInterval = 3,
-  targetType: MessageType = "group",
-  targetId: Number
+  targetList: Array<{ targetType: MessageType; targetId: Number }>
 ) {
   const now = new Date();
   if (
-    now.getMilliseconds() < 100 &&
+    now.getMilliseconds() <= 100 &&
     now.getSeconds() == 0 &&
     now.getMinutes() == 0 &&
     now.getHours() % hourInterval == startTime
@@ -49,7 +52,7 @@ export async function clock(
       },
     ];
 
-    const randomPixivImage = await getRandomImageWithPixivFromDB(300);
+    const randomPixivImage = await getRandomImageWithPixivFromDB_V2(300);
 
     if (!!randomPixivImage) {
       const randomPixivImageMessage: Message = [
@@ -73,15 +76,18 @@ export async function clock(
       postMessage.push(...randomPixivImageMessage);
     }
 
-    return sendMessage(targetType, targetId, postMessage).then((result) => {
-      console.log(
-        `[${now.toLocaleString("zh-CN", {
-          hourCycle: "h23",
-          dateStyle: "short",
-          timeStyle: "medium",
-        })}] [CLOCK] send [${targetType}] [${targetId}] [${result?.status}]`
-      );
+    targetList.forEach(({ targetType, targetId }) => {
+      return sendMessage(targetType, targetId, postMessage).then((result) => {
+        console.log(
+          `[${format(
+            now,
+            "yyyy-MM-dd HH:mm:ss"
+          )}] [CLOCK] send [${targetType}] [${targetId}] [${result?.status}]`
+        );
+      });
     });
+
+    return targetList.length;
   }
   return 0;
 }

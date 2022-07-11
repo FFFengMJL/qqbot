@@ -21,7 +21,7 @@ interface MessageResponseData {
 /**
  * 发送消息后的响应
  */
-interface MessageResponse {
+export interface MessageResponse {
   data: MessageResponseData | null;
   retcode: Number;
   status: String;

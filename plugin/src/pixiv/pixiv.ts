@@ -502,13 +502,13 @@ export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
 
     // 获取图片 url
     const imageSrc = targetArtwork.urls.regular;
-    let base64 = await getPixivImageToBase64(imageSrc);
+    let base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
     console.log(
       `[PIXIV] [BASE64] end [${format(new Date(), "yyyy-MM-dd HH:mm:ss:SSS")}]`
     );
 
     if (!base64) {
-      base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
+      base64 = await getPixivImageToBase64(imageSrc);
     }
 
     return {
@@ -614,6 +614,80 @@ export async function deletePixivRankingItem(illustId: number) {
       },
     });
     return item;
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
+}
+
+/**
+ * 从数据库中获取当天日榜随机图片
+ * @param maxLimit 最大排名
+ * @returns
+ */
+export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
+  try {
+    // 获取一页列表
+
+    const now = new Date();
+    let rankDay = format(subDays(now, 1), "yyyyMMdd");
+    let imageList = await PixivDBClient.pixivRankingImage.findMany({
+      where: {
+        rankDate: rankDay,
+        rank: {
+          lte: maxLimit,
+        },
+      },
+    });
+
+    if (imageList.length === 0) {
+      rankDay = format(subDays(now, 2), "yyyyMMdd");
+      imageList = await PixivDBClient.pixivRankingImage.findMany({
+        where: {
+          rankDate: rankDay,
+          rank: {
+            lte: maxLimit,
+          },
+        },
+      });
+    }
+    // 筛选图片列表
+    const filteredImageList = filterImageListFromDB(imageList);
+    console.log(
+      `[PIXIV] [DB:PixivRankingImage] imageListLength[${
+        imageList.length
+      }] filteredImageListLength[${filteredImageList.length}] [${format(
+        new Date(),
+        "yyyy-MM-dd HH:mm:ss:SSS"
+      )}]`
+    );
+
+    // 随机选取图片
+    const randomImageIndex = Math.floor(
+      Math.random() * filteredImageList.length
+    ); // 随机选取图片
+    const targetImageItem = filteredImageList[randomImageIndex];
+    const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
+    console.log(
+      `[PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`
+    );
+
+    const targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
+
+    if (!targetArtwork) {
+      return targetArtwork;
+    }
+
+    // 获取图片 url
+    const imageSrc = targetArtwork.urls.regular;
+    const url = imageSrc.replace("i.pximg.net", "i.pixiv.cat");
+
+    return {
+      title: targetImageItem.title,
+      artist: targetImageItem.user_name,
+      link: artworkUrl,
+      base64: url,
+    } as PixivImage;
   } catch (error) {
     console.log(error);
     return undefined;

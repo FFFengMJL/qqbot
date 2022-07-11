@@ -25,13 +25,13 @@
   "type": "commonjs",
   "nodemonConfig": {
     "delay": 2500,
+    "watch": [
+      "plugin/dist/*"
+    ],
     "ignore": [
       "./news.json",
       "plugin/dist/test.js",
       "plugin/dist/test.js.map"
-    ],
-    "watch": [
-      "plugin/dist/*"
     ]
   },
   "devDependencies": {

@@ -5,23 +5,18 @@ import { getPixivImageToBase64FromPixivCat } from "../pixivCat";
 import { RSSHubPixivRankingDate, RSSHubPixivRankingMode } from "./rsshub.type";
 import { PrismaClient, RSSHubPixivBookmarkIllust } from "@prisma/client";
 import { load } from "cheerio";
-import { isEqual } from "date-fns";
 import { logError } from "../../utils/error";
 
 /**
  * 对 rsshub 的连接，用户获取 pixiv 榜单
  */
 const RSSHubClient = axios.create({
-  timeout: 20000,
   headers: {
     "User-Agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37",
   },
-  proxy: {
-    host: "127.0.0.1",
-    port: 7890,
-  },
-  baseURL: "https://rsshub.app",
+  baseURL: "https://nas.mxcoras.vip:9243",
+  timeout: 5000,
 });
 
 const RSSuhPixivBookmarkDBClient = new PrismaClient().rSSHubPixivBookmarkIllust;

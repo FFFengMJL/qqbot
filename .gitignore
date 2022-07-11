@@ -19,3 +19,5 @@ session.token
 
 !prisma/schema.prisma
 !prisma/.env
+
+*.log

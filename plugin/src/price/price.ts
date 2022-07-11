@@ -110,6 +110,7 @@ export async function getPrice(
     }
   } catch (err) {
     console.log(err);
+    return undefined;
   }
 }
 

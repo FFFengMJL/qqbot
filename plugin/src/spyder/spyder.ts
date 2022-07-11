@@ -167,7 +167,7 @@ export async function initPixivRankingSpyder(
   mode: PixivNormalRankingMode = "daily",
   maxPage: number = 10,
   minutesLess = 20,
-  hour = 11,
+  hour = 12,
   intervalMS = 60 * 1000 * 10
 ) {
   setInterval(async () => {
@@ -269,7 +269,7 @@ export async function spyRSSHubPixivBookmark(
   // 当新增数量不为 0 时才进行消息发送
   if (newItems.length) {
     targetList.forEach(async ({ messageType, targetId }) => {
-      await sendNewPixivBookmarks(newItems, messageType, targetId);
+      return await sendNewPixivBookmarks(newItems, messageType, targetId);
     });
   }
 
@@ -321,7 +321,7 @@ export async function initRSSHubPixivBookmarkSpyder(
       `[${format(
         new Date(),
         "yyyy-MM-dd HH:mm:ss"
-      )}][SPYDER] [RSSHUB] pixivBookmark end`
+      )}] [SPYDER] [RSSHUB] pixivBookmark end`
     );
   }, 30 * 60 * 1000);
 }
