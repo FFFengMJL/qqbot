@@ -1,0 +1,127 @@
+import { MessageType } from "./http/http";
+import express from "express";
+import bodyParser from "body-parser";
+import * as time from "./clock/time";
+import * as clock from "./clock/clock";
+import * as Spyder from "./spyder/spyder";
+import * as Price from "./price/price";
+
+const se = express(); // create a server
+
+se.use(bodyParser.urlencoded({ extended: true }));
+se.use(bodyParser.json());
+
+let flag = true;
+let heartbeatTimes = 0;
+const showHeartbeatInterval = 100;
+
+// server
+se.post("", (req, rsp) => {
+  // 排除心跳消息
+  // fileter heartbeat
+  if (req.body.meta_event_type == "heartbeat") {
+    heartbeatTimes++;
+    if (flag && heartbeatTimes % showHeartbeatInterval == 0) {
+      console.log(
+        `this is the ${heartbeatTimes}th heartbeat, time is ${req.body.time}`
+      );
+    }
+    rsp.sendStatus(200);
+    return;
+  }
+
+  console.log(req.body.message_type, req.body.raw_message); // 看看具体是啥命令
+
+  // 判断是否是正常的文字消息
+  // check message type
+  if (
+    !req.body.message ||
+    !req.body.message[0] ||
+    req.body.message[0].type != "text"
+  ) {
+    rsp.sendStatus(200);
+    return;
+  }
+
+  // 获取命令
+  // get the command
+  const messageList: Array<String> = (req.body.message[0].data.text as String)
+    .split(" ")
+    .filter(Boolean); // split for get command
+
+  // get sender info
+  const userId = req.body.user_id;
+  const groupId = req.body.group_id;
+  const targetType = req.body.message_type as MessageType;
+  const targetId = targetType === "group" ? groupId : userId;
+
+  // console.log(req.body);
+
+  // deal with command
+  switch (messageList[0]) {
+    case "/time": {
+      time.sendNowTime_V2(targetType, targetId);
+      break;
+    }
+    case "/date": {
+      time.sendNowTime(targetType, targetId);
+      break;
+    }
+    case "/price": {
+      Price.price(messageList, targetType, targetId);
+      break;
+    }
+    case "/spy": {
+      Spyder.spyFF14([{ messageType: targetType, targetId }]);
+      break;
+    }
+    case "/spyPixiv": {
+      Spyder.spyPixivRanking("daily", 10);
+      break;
+    }
+    case "/spyPixivBookmark": {
+      Spyder.spyRSSHubPixivBookmark(123456798, [
+        { messageType: targetType, targetId },
+      ]);
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+
+  rsp.sendStatus(200);
+  return;
+});
+
+function main() {
+  // launch a server
+  const server = se.listen(6700, () => {
+    console.log(`Server is start at: `, server.address());
+  });
+
+  clock.initClock(0, 1, [
+    { targetType: "group", targetId: 123456798 },
+    { targetType: "group", targetId: 123456798 },
+  ]);
+  Spyder.initFF14Spyder(
+    [
+      { messageType: "group", targetId: 123456798 },
+      { messageType: "group", targetId: 123456798 },
+      { messageType: "group", targetId: 123456789 },
+    ],
+    {
+      startHour: 8, // 早上8点开始
+      endHour: 23, // 晚上23点结束
+      minuteInterval: 10, // 间隔10分钟爬取一次
+      second: 30, // 30s检测一次
+    }
+  );
+  Spyder.initPixivRankingSpyder();
+  Spyder.initRSSHubPixivBookmarkSpyder(123456789, [
+    { messageType: "group", targetId: 123456789 },
+    { messageType: "group", targetId: 123456789 },
+  ]);
+}
+
+main();
