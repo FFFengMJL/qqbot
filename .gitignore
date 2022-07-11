@@ -21,3 +21,4 @@ session.token
 !prisma/.env
 
 *.log
+plugin/src/main.ts
