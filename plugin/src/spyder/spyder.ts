@@ -1,5 +1,5 @@
+import { DateTime } from "luxon";
 import { RSSHubPixivBookmarkIllust } from "@prisma/client";
-import { zhCN } from "date-fns/locale";
 import { format } from "date-fns-tz";
 import { MessageType, Message, sendMessage } from "./../http/http";
 import {
@@ -9,7 +9,6 @@ import {
   upsertNews,
 } from "../new/news";
 import { New } from "../new/news.type";
-import { SpyTime } from "./spyder.type";
 import { PixivNormalRankingMode } from "../pixiv/pixiv.type";
 import {
   getRankingListFromPixiv,
@@ -25,6 +24,7 @@ import {
 import sharp from "sharp";
 import { load } from "cheerio";
 import { getPixivImageBufferFromPixivCat } from "../pixiv/pixivCat";
+import { CronJob } from "cron";
 
 /**
  * 进行一次完整的流程：获取官网数据 -> 对比是否存在新消息 -> 发送新消息
@@ -74,30 +74,31 @@ export async function spyFF14(
 }
 
 /**
- * 初始化 FF14 国服爬虫
- * @param messageType 消息类型（群聊/私聊）
- * @param targetId 目标 ID
- * @param spyTime 间隔时间
+ * 初始化 FF14 国服新闻爬虫
+ * @param targetList 目标列表（包含消息类型和目标 ID）
+ * @param cronTime 定时时间
+ * @returns
  */
-export async function initFF14Spyder(
+export function initFF14Spyder(
   targetList: Array<{ messageType: MessageType; targetId: Number }>,
-  spyTime: SpyTime = {
-    second: 10,
-    minuteInterval: 5,
-  }
+  cronTime: string | Date | DateTime = "0 */5 6-23 * * *"
 ) {
-  setInterval(async () => {
-    if (checkTime(new Date(), spyTime)) {
+  try {
+    return new CronJob(cronTime, async () => {
       console.log(
         `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [FF14] start`
       );
 
       await spyFF14(targetList);
+
       console.log(
         `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [FF14] end`
       );
-    }
-  }, spyTime.second * 1000);
+    });
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }
 
 /**
@@ -134,62 +135,33 @@ export async function sendNews(
 }
 
 /**
- * 检查时间是否符合要求
- * @param now 当前时间
- * @param spyTime 目标时间
+ * 初始化 pixiv 排行榜爬虫
+ * @param mode 榜单类型
+ * @param maxPage 最大页数
+ * @param cronTime 定期时间
  * @returns
  */
-function checkTime(now: Date, spyTime: SpyTime) {
-  const secondOK = now.getSeconds() <= spyTime.second;
-  const minuteOK = !spyTime.minute || now.getMinutes() <= spyTime.minute;
-  const minuteIntervalOK =
-    !spyTime.minuteInterval || now.getMinutes() % spyTime.minuteInterval === 0;
-  const hourIntervalOK =
-    !spyTime.hourInterval || now.getHours() % spyTime.hourInterval === 0;
-  const startHourOK = !spyTime.startHour || now.getHours() >= spyTime.startHour;
-  const endHourOK = !spyTime.endHour || now.getHours() <= spyTime.endHour;
-  return (
-    secondOK &&
-    minuteOK &&
-    minuteIntervalOK &&
-    hourIntervalOK &&
-    startHourOK &&
-    endHourOK
-  );
-}
-
-/**
- * 初始化 pixiv 日榜爬虫
- * @param mode 榜单模式
- * @param maxPage 最大页数（总共50 * 10页 500 张图）
- * @param minutesLess 小于这个数值则进行一次爬取
- * @param hour 进行爬取的小时时间
- * @param intervalMS setInterval 的时间，即间隔多少 ms 进行一次时间检查
- */
-export async function initPixivRankingSpyder(
+export function initPixivRankingSpyder(
   mode: PixivNormalRankingMode = "daily",
   maxPage: number = 10,
-  minutesLess = 20,
-  hour = 12,
-  intervalMS = 60 * 1000 * 10
+  cronTime: string | Date | DateTime = "0 15,45 12 * * *"
 ) {
-  setInterval(async () => {
-    const now = new Date();
-    const minutesOK = now.getMinutes() <= minutesLess;
-    const hourOK = now.getHours() == hour;
-
-    if (minutesOK && hourOK) {
+  try {
+    return new CronJob(cronTime, async () => {
       console.log(
         `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [PIXIV] start`
       );
 
-      spyPixivRanking(mode, maxPage);
+      await spyPixivRanking(mode, maxPage);
 
       console.log(
         `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [PIXIV] end`
       );
-    }
-  }, intervalMS); // 10 分钟检查一次
+    });
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }
 
 /**
@@ -341,23 +313,31 @@ ${item.link}`,
   return await sendMessage(messageType, targetId, messages);
 }
 
-export async function initRSSHubPixivBookmarkSpyder(
+export function initRSSHubPixivBookmarkSpyder(
   userId: number,
-  targetList: Array<{ messageType: MessageType; targetId: Number }>
+  targetList: Array<{ messageType: MessageType; targetId: Number }>,
+  cronTime: string | Date | DateTime = "0 */30 * * * *"
 ) {
-  setInterval(async () => {
-    console.log(
-      `[${format(
-        new Date(),
-        "yyyy-MM-dd HH:mm:ss"
-      )}] [SPYDER] [RSSHUB] pixivBookmark start`
-    );
-    await spyRSSHubPixivBookmark(userId, targetList);
-    console.log(
-      `[${format(
-        new Date(),
-        "yyyy-MM-dd HH:mm:ss"
-      )}] [SPYDER] [RSSHUB] pixivBookmark end`
-    );
-  }, 30 * 60 * 1000);
+  try {
+    return new CronJob(cronTime, async () => {
+      console.log(
+        `[${format(
+          new Date(),
+          "yyyy-MM-dd HH:mm:ss"
+        )}] [SPYDER] [RSSHUB] pixivBookmark start`
+      );
+
+      await spyRSSHubPixivBookmark(userId, targetList);
+
+      console.log(
+        `[${format(
+          new Date(),
+          "yyyy-MM-dd HH:mm:ss"
+        )}] [SPYDER] [RSSHUB] pixivBookmark end`
+      );
+    });
+  } catch (error) {
+    console.log(error);
+    return undefined;
+  }
 }

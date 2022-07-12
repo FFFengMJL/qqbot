@@ -1,8 +1,8 @@
 import { MessageType } from "./http/http";
 import express from "express";
 import bodyParser from "body-parser";
-import * as time from "./clock/time";
-import * as clock from "./clock/clock";
+import * as Time from "./clock/time";
+import * as Clock from "./clock/clock";
 import * as Spyder from "./spyder/spyder";
 import * as Price from "./price/price";
 
@@ -60,11 +60,11 @@ se.post("", (req, rsp) => {
   // deal with command
   switch (messageList[0]) {
     case "/time": {
-      time.sendNowTime_V2(targetType, targetId);
+      Time.sendNowTime_V2(targetType, targetId);
       break;
     }
     case "/date": {
-      time.sendNowTime(targetType, targetId);
+      Time.sendNowTime(targetType, targetId);
       break;
     }
     case "/price": {
@@ -100,28 +100,31 @@ function main() {
     console.log(`Server is start at: `, server.address());
   });
 
-  clock.initClock(0, 1, [
-    { targetType: "group", targetId: 123456798 },
-    { targetType: "group", targetId: 123456798 },
-  ]);
-  Spyder.initFF14Spyder(
+  // 初始化报时时钟并开始任务
+  Clock.initClock(
     [
-      { messageType: "group", targetId: 123456798 },
-      { messageType: "group", targetId: 123456798 },
-      { messageType: "group", targetId: 123456789 },
+      { targetType: "group", targetId: 123456798 },
+      { targetType: "group", targetId: 123456798 },
     ],
-    {
-      startHour: 8, // 早上8点开始
-      endHour: 23, // 晚上23点结束
-      minuteInterval: 10, // 间隔10分钟爬取一次
-      second: 30, // 30s检测一次
-    }
-  );
-  Spyder.initPixivRankingSpyder();
+    100,
+    "0 0 * * * *"
+  )?.start();
+
+  // 初始化国服 FF14 官网新闻爬虫并开始任务
+  Spyder.initFF14Spyder([
+    { messageType: "group", targetId: 123456798 },
+    { messageType: "group", targetId: 123456798 },
+    { messageType: "group", targetId: 123456789 },
+  ])?.start();
+
+  // 初始化 pixiv 日榜爬虫并开始任务
+  Spyder.initPixivRankingSpyder()?.start();
+
+  // 初始化 RSSHub 的 pixiv 用户收藏爬虫并开始任务
   Spyder.initRSSHubPixivBookmarkSpyder(123456789, [
     { messageType: "group", targetId: 123456789 },
     { messageType: "group", targetId: 123456789 },
-  ]);
+  ])?.start();
 }
 
 main();
