@@ -2,12 +2,7 @@ import { CronJob } from "cron";
 import { DateTime } from "luxon";
 import { format } from "date-fns";
 import { getRandomImageWithPixivFromDB_V2 } from "../pixiv/pixiv";
-import {
-  Message,
-  sendMessage,
-  MessageType,
-  MessageResponse,
-} from "./../http/http";
+import { Message, sendMessage, MessageType } from "./../http/http";
 
 /**
  * 整点报时闹钟
@@ -26,7 +21,7 @@ export function initClock(
   targetList [
     ${targetList
       .map((target) => `targetType ${target.targetType} ${target.targetId}`)
-      .join("\n\t\t")}
+      .join("\n    ")}
   ]`);
     return new CronJob(cronTime, () => clock(targetList, pixivRankLimit));
   } catch (error) {

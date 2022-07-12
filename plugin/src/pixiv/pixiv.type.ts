@@ -84,7 +84,17 @@ interface IllustContentType {
   yuri: boolean;
 }
 
-export const TAG_EXCLUDE_FILTER = ["漫画", "創作BL", "BL", "男の子", "筋肉娘"];
+export const TAG_EXCLUDE_FILTER = [
+  "漫画",
+  "創作BL",
+  "BL",
+  "男の子",
+  "筋肉娘",
+  "メスケモ",
+  "ケモノ",
+  "4コマ",
+  "ケモナー",
+];
 export const TYPE_FILTER: Partial<IllustContentType> = {
   grotesque: false,
   violent: false,
