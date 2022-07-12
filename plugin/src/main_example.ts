@@ -11,25 +11,8 @@ const se = express(); // create a server
 se.use(bodyParser.urlencoded({ extended: true }));
 se.use(bodyParser.json());
 
-let flag = true;
-let heartbeatTimes = 0;
-const showHeartbeatInterval = 100;
-
 // server
 se.post("", (req, rsp) => {
-  // 排除心跳消息
-  // fileter heartbeat
-  if (req.body.meta_event_type == "heartbeat") {
-    heartbeatTimes++;
-    if (flag && heartbeatTimes % showHeartbeatInterval == 0) {
-      console.log(
-        `this is the ${heartbeatTimes}th heartbeat, time is ${req.body.time}`
-      );
-    }
-    rsp.sendStatus(200);
-    return;
-  }
-
   console.log(req.body.message_type, req.body.raw_message); // 看看具体是啥命令
 
   // 判断是否是正常的文字消息
