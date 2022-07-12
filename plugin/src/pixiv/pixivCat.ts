@@ -50,3 +50,33 @@ export async function getPixivImageToBase64FromPixivCat(url: string) {
     return logError(error);
   }
 }
+
+/**
+ * 通过 url 获取图片并转换成 base64 字符串
+ * @param url 图片的 url，以 https://i.pximg.net 域名开头
+ * @returns
+ */
+export async function getPixivImageBufferFromPixivCat(url: string) {
+  try {
+    const pixivCatUrl = url.replace("i.pximg.net", "i.pixiv.re");
+    console.log(`[PIXIV] url: ${pixivCatUrl}`);
+    const fileResponse = await pixivCat.get(pixivCatUrl);
+    console.log(
+      `[PIXIV] pixiv.cat response: ${fileResponse.status} ${fileResponse.data.length}`
+    );
+    if (fileResponse.status !== 200) {
+      return undefined;
+    }
+
+    console.log(
+      `[PIXIV] [BUFFER] start [${format(
+        new Date(),
+        "yyyy-MM-dd HH:mm:ss:SSS"
+      )}]`
+    );
+
+    return Buffer.from(fileResponse.data, "binary");
+  } catch (error: any) {
+    return logError(error);
+  }
+}

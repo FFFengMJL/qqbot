@@ -22,6 +22,9 @@ import {
   isBookmarkItemExistinDB,
   parseRSSHubPixivBookmarkXML,
 } from "../pixiv/rsshub/rsshub";
+import sharp from "sharp";
+import { load } from "cheerio";
+import { getPixivImageBufferFromPixivCat } from "../pixiv/pixivCat";
 
 /**
  * 进行一次完整的流程：获取官网数据 -> 对比是否存在新消息 -> 发送新消息
@@ -268,8 +271,41 @@ export async function spyRSSHubPixivBookmark(
 
   // 当新增数量不为 0 时才进行消息发送
   if (newItems.length) {
-    targetList.forEach(async ({ messageType, targetId }) => {
-      return await sendNewPixivBookmarks(newItems, messageType, targetId);
+    newItems.forEach(async (item) => {
+      const url = load(item.description)("img").eq(0).attr("src");
+      if (!url) return;
+      const imageBuffer = await getPixivImageBufferFromPixivCat(url);
+      const blurImage = (
+        await sharp(imageBuffer)
+          .blur(Math.random() * 2 + 3)
+          .toBuffer()
+      ).toString("base64");
+      targetList.forEach(async ({ messageType, targetId }) => {
+        return sendMessage(messageType, targetId, [
+          {
+            type: "text",
+            data: {
+              text: "今日推荐:\n",
+            },
+          },
+          {
+            type: "image",
+            data: {
+              file: `base64://${blurImage}`,
+              c: 3,
+            },
+          },
+          {
+            type: "text",
+            data: {
+              text: `
+作品名：${item.title}
+画师：${item.author}
+链接：${item.link}`,
+            },
+          },
+        ]);
+      });
     });
   }
 

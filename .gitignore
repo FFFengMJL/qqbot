@@ -22,3 +22,4 @@ session.token
 
 *.log
 plugin/src/main.ts
+plugin/src/test.ts

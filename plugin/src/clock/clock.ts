@@ -11,15 +11,16 @@ import {
  * 整点报时闹钟
  * @param {number} startTime 开始时间
  * @param {number} hourInterval 间隔时间
- * @param {number} targetType 目标类型（群聊/私聊）
- * @param {number} targetId 目标 ID
+ * @param targetList 目标群聊/私聊列表
+ * @param pixivRankLimit pixiv 榜单排名下限
  */
 export function initClock(
   startTime = 0,
   hourInterval = 3,
-  targetList: Array<{ targetType: MessageType; targetId: Number }>
+  targetList: Array<{ targetType: MessageType; targetId: Number }>,
+  pixivRankLimit: number = 0
 ) {
-  setInterval(() => clock(startTime, hourInterval, targetList), 100);
+  setInterval(() => clock(startTime, hourInterval, targetList), pixivRankLimit);
   console.log(`\
 Set a Clock:
 startTime - ${startTime} hourInterval - ${hourInterval}
@@ -30,7 +31,8 @@ targetList: ${targetList}`);
 export async function clock(
   startTime = 0,
   hourInterval = 3,
-  targetList: Array<{ targetType: MessageType; targetId: Number }>
+  targetList: Array<{ targetType: MessageType; targetId: Number }>,
+  pixivRankLimit: number = 0
 ) {
   const now = new Date();
   if (
@@ -52,7 +54,9 @@ export async function clock(
       },
     ];
 
-    const randomPixivImage = await getRandomImageWithPixivFromDB_V2(300);
+    const randomPixivImage = await getRandomImageWithPixivFromDB_V2(
+      pixivRankLimit
+    );
 
     if (!!randomPixivImage) {
       const randomPixivImageMessage: Message = [
