@@ -1,7 +1,6 @@
 import { subDays } from "date-fns";
 import { format, utcToZonedTime } from "date-fns-tz";
 import {
-  ILLUST_TYPE_FILETER,
   PixivArtworksContent,
   PixivArtworksIllust,
   PixivArtworksIllustBasic,
@@ -9,8 +8,6 @@ import {
   PixivNormalRankingMode,
   PixivRankingImageItem,
   PixivRankingReponse,
-  TAG_EXCLUDE_FILTER,
-  TYPE_FILTER,
 } from "./pixiv.type";
 import axios from "axios";
 import * as cheerio from "cheerio";
@@ -18,6 +15,11 @@ import { get as ObjectGet } from "lodash";
 import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
 import { PixivRankingImage, PrismaClient } from "@prisma/client";
 import { logError } from "../utils/error";
+import {
+  ILLUST_TYPE_FILETER,
+  TAG_EXCLUDE_FILTER,
+  TYPE_FILTER,
+} from "../pixiv_filter";
 
 const PixivDBClient = {
   pixivRankingImage: new PrismaClient().pixivRankingImage,

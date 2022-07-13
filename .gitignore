@@ -23,3 +23,4 @@ session.token
 *.log
 plugin/src/main.ts
 plugin/src/test.ts
+plugin/src/pixiv_filter.ts

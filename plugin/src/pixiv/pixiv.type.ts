@@ -68,7 +68,7 @@ interface IllustSeries {
   page_url: string;
 }
 
-interface IllustContentType {
+export interface IllustContentType {
   sexual: number;
   lo: boolean;
   grotesque: boolean;
@@ -83,27 +83,6 @@ interface IllustContentType {
   bl: boolean;
   yuri: boolean;
 }
-
-export const TAG_EXCLUDE_FILTER = [
-  "漫画",
-  "創作BL",
-  "BL",
-  "男の子",
-  "筋肉娘",
-  "メスケモ",
-  "ケモノ",
-  "4コマ",
-  "ケモナー",
-];
-export const TYPE_FILTER: Partial<IllustContentType> = {
-  grotesque: false,
-  violent: false,
-  drug: false,
-  antisocial: false,
-  bl: false,
-  furry: false,
-};
-export const ILLUST_TYPE_FILETER = ["1"];
 
 export interface PixivArtworksContent {
   timestamp: string;
