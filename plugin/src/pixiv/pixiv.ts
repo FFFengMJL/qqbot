@@ -695,3 +695,25 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
     return undefined;
   }
 }
+
+/**
+ * 获取对应日期和排名限制的日榜图片条目
+ * @param rankDate 排名日期
+ * @param rankLimit 排名限制，target.rank <= rankLimit
+ * @returns
+ */
+export function getRankImages(rankDate: string, rankLimit: number = 500) {
+  try {
+    return PixivDBClient.pixivRankingImage.findMany({
+      where: {
+        rankDate,
+        rank: {
+          lte: rankLimit,
+        },
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return null;
+  }
+}

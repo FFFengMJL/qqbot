@@ -24,3 +24,5 @@ session.token
 plugin/src/main.ts
 plugin/src/test.ts
 plugin/src/pixiv_filter.ts
+plugin/file/wordCloud/image/*
+plugin/file/wordCloud/font/*

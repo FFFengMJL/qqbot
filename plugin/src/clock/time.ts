@@ -10,8 +10,12 @@ import { Message, MessageType, sendMessage } from "./../http/http";
  * @param targetId 目标id
  * @param message 消息
  */
-export async function sendNowTime(targetType: MessageType, targetId: Number) {
-  const randomPixivImage = await getRandomImageWithPixivFromDB(300);
+export async function sendNowTime(
+  targetType: MessageType,
+  targetId: Number,
+  pixivRankLimit: number = 100
+) {
+  const randomPixivImage = await getRandomImageWithPixivFromDB(pixivRankLimit);
 
   const nowTime: Message = [
     {

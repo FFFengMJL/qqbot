@@ -29,14 +29,11 @@ export async function getNewsList(
   pageIndex: number = 0,
   gameCode: string = "ff"
 ) {
-  const response = await FF14ChineClent.get(`?url=List?`, {
-    params: {
-      gameCode,
-      category: categorys.join(","),
-      pageIndex,
-      pageSize,
-    },
-  });
+  const response = await FF14ChineClent.get(
+    `?url=List?gameCode=${gameCode}&category=${categorys.join(
+      ","
+    )}&pageIndex=${pageIndex}&pageSize=${pageSize}`
+  );
   return response.data as NewsResponse;
 }
 
@@ -47,12 +44,9 @@ export async function getNewsList(
  * @returns
  */
 export async function getArticle(id: number, gameCode: string = "ff") {
-  const response = await FF14ChineClent.get(`?url=detail?`, {
-    params: {
-      gameCode,
-      id,
-    },
-  });
+  const response = await FF14ChineClent.get(
+    `?url=detail?gameCode=${gameCode}&id=${id}`
+  );
 
   return response.data as ResponseArticle;
 }

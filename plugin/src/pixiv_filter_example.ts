@@ -1,4 +1,4 @@
-import { IllustContentType } from "pixiv/pixiv.type";
+import { IllustContentType } from "./pixiv/pixiv.type";
 
 export const TAG_EXCLUDE_FILTER = [
   "漫画",

@@ -1,7 +1,7 @@
 import { DateTime } from "luxon";
 import { RSSHubPixivBookmarkIllust } from "@prisma/client";
 import { format } from "date-fns-tz";
-import { MessageType, Message, sendMessage } from "./../http/http";
+import { MessageType, Message, sendMessage, TargetList } from "./../http/http";
 import {
   getNewsCount,
   getNewsList,
@@ -32,9 +32,7 @@ import { CronJob } from "cron";
  * @param targetId
  * @returns
  */
-export async function spyFF14(
-  targetList: Array<{ messageType: MessageType; targetId: Number }>
-) {
+export async function spyFF14(targetList: TargetList) {
   try {
     const currentNews = (await getNewsList()).Data;
     const unaddedNew: Array<New> = [];
@@ -80,7 +78,7 @@ export async function spyFF14(
  * @returns
  */
 export function initFF14Spyder(
-  targetList: Array<{ messageType: MessageType; targetId: Number }>,
+  targetList: TargetList,
   cronTime: string | Date | DateTime = "0 */5 6-23 * * *"
 ) {
   try {
@@ -215,7 +213,7 @@ export async function spyPixivRanking(
 
 export async function spyRSSHubPixivBookmark(
   userId: number,
-  targetList: Array<{ messageType: MessageType; targetId: Number }>
+  targetList: TargetList
 ) {
   // 从 RSSHub 获取 xml
   console.log(`[SPYDER] [RSSHUB] get xml`);
@@ -246,7 +244,10 @@ export async function spyRSSHubPixivBookmark(
     newItems.forEach(async (item) => {
       const url = load(item.description)("img").eq(0).attr("src");
       if (!url) return;
-      const imageBuffer = await getPixivImageBufferFromPixivCat(url);
+      let imageBuffer = await getPixivImageBufferFromPixivCat(url);
+      while (!imageBuffer) {
+        imageBuffer = await getPixivImageBufferFromPixivCat(url);
+      }
       const blurImage = (
         await sharp(imageBuffer)
           .blur(Math.random() * 2 + 3)
@@ -315,7 +316,7 @@ ${item.link}`,
 
 export function initRSSHubPixivBookmarkSpyder(
   userId: number,
-  targetList: Array<{ messageType: MessageType; targetId: Number }>,
+  targetList: TargetList,
   cronTime: string | Date | DateTime = "0 */30 * * * *"
 ) {
   try {

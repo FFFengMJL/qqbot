@@ -6,6 +6,8 @@ const BOT_HTTP_SERVER = {
   PORT: 5700,
 };
 
+export type TargetList = Array<{ messageType: MessageType; targetId: number }>;
+
 /**
  * 消息类型
  */
