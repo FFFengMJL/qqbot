@@ -5,6 +5,7 @@ import * as Time from "./clock/time";
 import * as Clock from "./clock/clock";
 import * as Spyder from "./spyder/spyder";
 import * as Price from "./price/price";
+import * as WordCloud from "./wordCloud/wordCloud";
 
 const se = express(); // create a server
 
@@ -68,6 +69,10 @@ se.post("", (req, rsp) => {
       ]);
       break;
     }
+    case "/rankState": {
+      WordCloud.sendCurrentWordCloud([{ messageType: targetType, targetId }]);
+      break;
+    }
     default: {
       break;
     }
@@ -109,5 +114,11 @@ function main() {
     { messageType: "group", targetId: 123456789 },
   ])?.start();
 }
+
+// 初始化词云定期生成任务
+WordCloud.initCronGeneration([
+  { messageType: "group", targetId: 123456789 },
+  { messageType: "group", targetId: 123456789 },
+])?.start();
 
 main();
