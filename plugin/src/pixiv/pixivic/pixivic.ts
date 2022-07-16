@@ -83,7 +83,7 @@ export async function getRandomPixivicImage(imageList: Array<PixivicListItem>) {
 
     return await getPixivImageToBase64FromPixivCat(originUrl);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return;
   }
 }

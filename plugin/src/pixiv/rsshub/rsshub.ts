@@ -170,7 +170,7 @@ export async function isBookmarkItemExistinDB(item: RSSHubPixivBookmarkIllust) {
     });
     return result;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -195,7 +195,7 @@ export async function createBookmarkItemInDB(item: RSSHubPixivBookmarkIllust) {
     });
     return result;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }

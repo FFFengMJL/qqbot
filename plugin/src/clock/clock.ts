@@ -25,7 +25,7 @@ export function initClock(
   ]`);
     return new CronJob(cronTime, () => clock(targetList, pixivRankLimit));
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }

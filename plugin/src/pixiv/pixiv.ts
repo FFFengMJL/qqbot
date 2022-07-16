@@ -54,7 +54,7 @@ export async function getRankingStringFromPixivWithHtml() {
 
     return response.data as string;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -147,7 +147,7 @@ export async function getRankingListFromPixiv(
 
     return response.data as PixivRankingReponse;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -193,7 +193,7 @@ export function parseArtworkContentToJSON(html: string) {
   try {
     return JSON.parse(content) as PixivArtworksContent;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -413,7 +413,7 @@ export async function upsertImageRankingItem(
       },
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -439,7 +439,7 @@ export async function isPixivRankingImageItemExistInDB(
 
     return result.rankDate == rankDate;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -520,7 +520,7 @@ export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
       base64,
     } as PixivImage;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -594,7 +594,7 @@ export async function getArtworkFromPixiv(illustId: number) {
 
     return artwork;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -617,7 +617,7 @@ export async function deletePixivRankingItem(illustId: number) {
     });
     return item;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }

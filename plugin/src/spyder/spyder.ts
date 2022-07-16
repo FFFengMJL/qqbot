@@ -94,7 +94,7 @@ export function initFF14Spyder(
       );
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -157,7 +157,7 @@ export function initPixivRankingSpyder(
       );
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -338,7 +338,7 @@ export function initRSSHubPixivBookmarkSpyder(
       );
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }

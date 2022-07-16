@@ -73,7 +73,7 @@ export async function isNewExistInDB(singleNew: New) {
     const currentDate = new Date(singleNew.PublishDate);
     return isEqual(targetNew.PublishDate, currentDate);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -111,7 +111,7 @@ export async function upsertNews(singleNew: New) {
       },
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -124,7 +124,7 @@ export async function getNewsCount() {
   try {
     return await newsDBClient.count();
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }

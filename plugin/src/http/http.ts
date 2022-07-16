@@ -73,7 +73,7 @@ export async function sendPrivateMessage(body: PrivateMessageBody) {
 
     return response.data as MessageResponse;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -91,7 +91,7 @@ export async function sendGroupMessage(body: GroupMessageBody) {
 
     return response.data as MessageResponse;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
