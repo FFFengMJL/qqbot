@@ -250,7 +250,7 @@ export async function spyRSSHubPixivBookmark(
       }
       const blurImage = (
         await sharp(imageBuffer)
-          .blur(Math.random() * 2 + 3)
+          .blur(Math.random() * 2 + 5)
           .toBuffer()
       ).toString("base64");
       targetList.forEach(async ({ messageType, targetId }) => {

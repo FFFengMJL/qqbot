@@ -691,7 +691,7 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
       base64: url,
     } as PixivImage;
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return undefined;
   }
 }
@@ -703,17 +703,12 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
  * @returns
  */
 export function getRankImages(rankDate: string, rankLimit: number = 500) {
-  try {
-    return PixivDBClient.pixivRankingImage.findMany({
-      where: {
-        rankDate,
-        rank: {
-          lte: rankLimit,
-        },
+  return PixivDBClient.pixivRankingImage.findMany({
+    where: {
+      rankDate,
+      rank: {
+        lte: rankLimit,
       },
-    });
-  } catch (error) {
-    console.log(error);
-    return null;
-  }
+    },
+  });
 }

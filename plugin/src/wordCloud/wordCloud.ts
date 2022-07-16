@@ -25,7 +25,7 @@ export function generateWordCloudWithText(
   pythonFilePath: string = "plugin/src/wordCloud",
   pythonFilename: string = "wordCloud.py"
 ) {
-  console.log(`[WORDCLOUD] start: 
+  console.log(`[WORD_CLOUD] start: 
   pythonFile [${pythonFilePath}/${pythonFilename}]
   targetFile [${targetFilePath}/${targetFilename}]
   font [${fontPath}]
@@ -38,13 +38,13 @@ export function generateWordCloudWithText(
     text,
   ]);
   const error = python.stderr.toString();
+
   if (error) {
-    console.log(error);
-    return null;
+    throw new Error(error);
   }
 
   const output = python.stdout.toString().slice(0, -1); // 输出带了一个回车需要处理
-  console.log(`[WORDCLOUD] end output [${output}]`);
+  console.log(`[WORD_CLOUD] end output [${output}]`);
 
   return output;
 }
@@ -59,7 +59,7 @@ export function generateWordCloudWithText(
  * @param pythonFilename python 文件名
  * @returns
  */
-async function generateWordCloudWithRankLimit(
+async function generateWordCloudWithPixivRankImage(
   rankDate: string,
   rankLimit: number = 500,
   fontPath: string = "plugin/file/wordCloud/font/sarasa-ui-sc-regular.ttf",
@@ -71,8 +71,7 @@ async function generateWordCloudWithRankLimit(
 
   if (!imageList || !imageList.length) return null;
 
-  const tagList = imageList.map((image) => image.tags);
-  const tagString = tagList.join(",");
+  const tagString = imageList.map((image) => image.tags).join(",");
   const imagePath = generateWordCloudWithText(
     tagString,
     fontPath,
@@ -86,79 +85,43 @@ async function generateWordCloudWithRankLimit(
 }
 
 /**
- * 生成当天的 pixiv 日榜词云图
+ * 获取当天的日榜词云
  * @param rankLimit 排名限制
- * @param fontPath 字体路径
  * @param targetFilePath 目标文件路径
- * @param pythonFilePath python 文件路径
- * @param pythonFilename python 文件名
  * @returns
  */
-export async function generateWordCloudWithCurrentPixivRankImage(
-  rankLimit: number = 500,
-  fontPath: string = "plugin/file/wordCloud/font/sarasa-ui-sc-regular.ttf",
-  targetFilePath: string = "plugin/file/wordCloud/image",
-  pythonFilePath: string = "plugin/src/wordCloud",
-  pythonFilename: string = "wordCloud.py"
-) {
-  const now = new Date();
-  let rankDate;
-  if (now.getHours() < 13) {
-    rankDate = format(subDays(now, 2), "yyyyMMdd");
-  } else {
-    rankDate = format(subDays(now, 1), "yyyyMMdd");
-  }
-
-  const imagePath = await generateWordCloudWithRankLimit(
-    rankDate,
-    rankLimit,
-    fontPath,
-    targetFilePath,
-    pythonFilePath,
-    pythonFilename
-  );
-
-  if (!imagePath) return null;
-
-  return { rankDate, imagePath } as WordCloudGenerationResult;
-}
-
-export async function getWordCloudWithCurrentRankImage(
+export async function getWordCloudWithRankImage(
+  rankDate: string,
   rankLimit: number = 500,
   targetFilePath: string = "plugin/file/wordCloud/image"
 ) {
-  const now = new Date();
-  let targetDate;
-  if (now.getHours() < 13) {
-    targetDate = subDays(now, 2);
-  } else {
-    targetDate = subDays(now, 1);
-  }
-  const rankDate = format(targetDate, "yyyyMMdd");
-
   const imagePath = `${targetFilePath}/${rankDate}_${rankLimit}.png`;
 
   // 判断文件是否存在
-  let fileAccessed;
   try {
     accessSync(imagePath, constants.F_OK);
-    fileAccessed = true;
+    // 如果文件存在，直接返回
+    return {
+      rankDate,
+      imagePath,
+    } as WordCloudGenerationResult;
   } catch (error) {
-    fileAccessed = false;
-  }
-
-  if (!fileAccessed) {
-    return await generateWordCloudWithCurrentPixivRankImage(
+    // 文件不存在，进行生成
+    console.log(`[WORD_CLOUD] ${imagePath} not exist, generating`);
+    const wordCloudImage = await generateWordCloudWithPixivRankImage(
+      rankDate,
       rankLimit,
       undefined,
       targetFilePath
     );
-  }
 
-  return {
-    rankDate,
-    imagePath,
-  } as WordCloudGenerationResult;
+    if (!wordCloudImage) return null;
+
+    return {
+      imagePath: wordCloudImage,
+      rankDate,
+    } as WordCloudGenerationResult;
+  }
 }
 
 /**
@@ -171,35 +134,57 @@ export async function sendCurrentWordCloud(
   targetList: TargetList,
   rankLimit: number = 500
 ) {
-  const wordCloud = await getWordCloudWithCurrentRankImage(rankLimit);
-  if (!wordCloud) return wordCloud;
+  let message: Message = [];
 
-  const rankDate = parse(wordCloud.rankDate, "yyyyMMdd", new Date());
-  const message: Message = [
-    {
-      type: "text",
-      data: {
-        text: `${format(
-          rankDate,
-          "yyyy年MM月dd日"
-        )} 的前 ${rankLimit} 名作品词云为：\n`,
-      },
-    },
-    {
-      type: "image",
-      data: {
-        file: `file://${process.cwd()}/${wordCloud.imagePath}`,
-        c: 3,
-      },
-    },
-  ];
+  try {
+    const now = new Date();
+    let rankDate = subDays(now, 1);
+    let rankDateString = format(rankDate, "yyyyMMdd");
+    let wordCloud = await getWordCloudWithRankImage(rankDateString, rankLimit);
 
+    if (!wordCloud) {
+      rankDate = subDays(now, 2);
+      rankDateString = format(rankDate, "yyyyMMdd");
+      wordCloud = await getWordCloudWithRankImage(rankDateString, rankLimit);
+    }
+
+    if (!wordCloud) return null;
+
+    message = [
+      {
+        type: "text",
+        data: {
+          text: `${format(
+            rankDate,
+            "yyyy年MM月dd日"
+          )} 的前 ${rankLimit} 名作品词云为：\n`,
+        },
+      },
+      {
+        type: "image",
+        data: {
+          file: `file://${process.cwd()}/${wordCloud.imagePath}`,
+          c: 3,
+        },
+      },
+    ];
+  } catch (error) {
+    console.error(error);
+    message = [
+      {
+        type: "text",
+        data: { text: "获取词云图片出错" },
+      },
+    ];
+  }
+
+  // 发送消息
   targetList.forEach(({ messageType, targetId }) => {
     console.log(`[WORD_CLOUD] sendTo [${messageType}] [${targetId}]`);
     return sendMessage(messageType, targetId, message);
   });
 
-  return wordCloud;
+  return message.length;
 }
 
 /**
@@ -234,7 +219,8 @@ export function initCronGeneration(
       );
     });
   } catch (error) {
-    console.log(error);
-    return null;
+    console.error(arguments);
+    console.error(error);
+    return undefined;
   }
 }
