@@ -478,12 +478,7 @@ export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
     // 筛选图片列表
     const filteredImageList = filterImageListFromDB(imageList);
     console.log(
-      `[PIXIV] [DB:PixivRankingImage] imageListLength[${
-        imageList.length
-      }] filteredImageListLength[${filteredImageList.length}] [${format(
-        new Date(),
-        "yyyy-MM-dd HH:mm:ss:SSS"
-      )}]`
+      `[PIXIV] [DB:PixivRankingImage] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`
     );
 
     // 随机选取图片
@@ -656,12 +651,7 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
     // 筛选图片列表
     const filteredImageList = filterImageListFromDB(imageList);
     console.log(
-      `[PIXIV] [DB:PixivRankingImage] imageListLength[${
-        imageList.length
-      }] filteredImageListLength[${filteredImageList.length}] [${format(
-        new Date(),
-        "yyyy-MM-dd HH:mm:ss:SSS"
-      )}]`
+      `[PIXIV] [DB:PixivRankingImage] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`
     );
 
     // 随机选取图片
