@@ -2,6 +2,7 @@ export interface PixivImage {
   artist: string;
   title: string;
   link: string;
+  directLink?: string;
   base64: string;
 }
 

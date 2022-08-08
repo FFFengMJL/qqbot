@@ -17,14 +17,16 @@ import {
 } from "../pixiv/pixiv";
 import {
   createBookmarkItemInDB,
+  getBookmarksFromOriginalRSSHub,
   getBookmarksFromRSSHub,
   isBookmarkItemExistinDB,
   parseRSSHubPixivBookmarkXML,
 } from "../pixiv/rsshub/rsshub";
 import sharp from "sharp";
 import { load } from "cheerio";
-import { getPixivImageBufferFromPixivCat } from "../pixiv/pixivCat";
+import { getPixivImageBufferFromPixivCat } from "../pixiv/pixivRE/pixivCat";
 import { CronJob } from "cron";
+import { fileURL2PixivReURL } from "../pixiv/pixivRE/pixivRe";
 
 /**
  * 进行一次完整的流程：获取官网数据 -> 对比是否存在新消息 -> 发送新消息
@@ -66,7 +68,7 @@ export async function spyFF14(targetList: TargetList) {
 
     return unaddedNew.length;
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return undefined;
   }
 }
@@ -211,16 +213,26 @@ export async function spyPixivRanking(
   return upsertItemLength;
 }
 
+/**
+ * 从 RSSHub 获取对应用户的收藏
+ * @param userId 目标用户的 ID
+ * @param targetList 需要发送的目标列表
+ * @param blurParam 高斯模糊的系数
+ * @returns
+ */
 export async function spyRSSHubPixivBookmark(
   userId: number,
-  targetList: TargetList
+  targetList: TargetList,
+  blurParam: number = Math.random() * 2 + 4
 ) {
   // 从 RSSHub 获取 xml
   console.log(`[SPYDER] [RSSHUB] get xml`);
-  const xmlString = await getBookmarksFromRSSHub(userId);
+  let xmlString = await getBookmarksFromRSSHub(userId);
   if (!xmlString) {
-    return xmlString;
+    xmlString = await getBookmarksFromOriginalRSSHub(userId);
   }
+
+  if (!xmlString) return xmlString;
 
   // 解析 xml 成对应的数组
   console.log(`[SPYDER] [RSSHUB] parse xml`);
@@ -244,14 +256,13 @@ export async function spyRSSHubPixivBookmark(
     newItems.forEach(async (item) => {
       const url = load(item.description)("img").eq(0).attr("src");
       if (!url) return;
-      let imageBuffer = await getPixivImageBufferFromPixivCat(url);
+      const directLink = fileURL2PixivReURL(url);
+      let imageBuffer = await getPixivImageBufferFromPixivCat(directLink);
       while (!imageBuffer) {
-        imageBuffer = await getPixivImageBufferFromPixivCat(url);
+        imageBuffer = await getPixivImageBufferFromPixivCat(directLink);
       }
       const blurImage = (
-        await sharp(imageBuffer)
-          .blur(Math.random() * 2 + 5)
-          .toBuffer()
+        await sharp(imageBuffer).blur(blurParam).toBuffer()
       ).toString("base64");
       targetList.forEach(async ({ messageType, targetId }) => {
         return sendMessage(messageType, targetId, [
@@ -274,7 +285,8 @@ export async function spyRSSHubPixivBookmark(
               text: `
 作品名：${item.title}
 画师：${item.author}
-链接：${item.link}`,
+链接：${item.link}
+直达：${directLink}`,
             },
           },
         ]);
@@ -314,9 +326,18 @@ ${item.link}`,
   return await sendMessage(messageType, targetId, messages);
 }
 
+/**
+ * 初始化 RSSHub pixiv 用户收藏的爬虫
+ * @param userId 目标 pixiv 用户
+ * @param targetList 发送目标列表
+ * @param blurParam 高斯模糊系数
+ * @param cronTime 定时时间
+ * @returns
+ */
 export function initRSSHubPixivBookmarkSpyder(
   userId: number,
   targetList: TargetList,
+  blurParam: number = Math.random() * 2 + 4,
   cronTime: string | Date | DateTime = "0 */30 * * * *"
 ) {
   try {
@@ -328,7 +349,7 @@ export function initRSSHubPixivBookmarkSpyder(
         )}] [SPYDER] [RSSHUB] pixivBookmark start`
       );
 
-      await spyRSSHubPixivBookmark(userId, targetList);
+      await spyRSSHubPixivBookmark(userId, targetList, blurParam);
 
       console.log(
         `[${format(

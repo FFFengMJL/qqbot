@@ -109,7 +109,7 @@ export async function getPrice(
       return sendMessage(targetType, targetId, message);
     }
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return undefined;
   }
 }

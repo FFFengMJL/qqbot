@@ -12,7 +12,7 @@ import {
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { get as ObjectGet } from "lodash";
-import { getPixivImageToBase64FromPixivCat } from "./pixivCat";
+import { getPixivImageToBase64FromPixivCat } from "./pixivRE/pixivCat";
 import { PixivRankingImage, PrismaClient } from "@prisma/client";
 import { logError } from "../utils/error";
 import {
@@ -20,6 +20,7 @@ import {
   TAG_EXCLUDE_FILTER,
   TYPE_FILTER,
 } from "../pixiv_filter";
+import { fileURL2PixivReURL } from "./pixivRE/pixivRe";
 
 const PixivDBClient = {
   pixivRankingImage: new PrismaClient().pixivRankingImage,
@@ -649,7 +650,7 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
       });
     }
     // 筛选图片列表
-    const filteredImageList = filterImageListFromDB(imageList);
+    let filteredImageList = filterImageListFromDB(imageList);
     console.log(
       `[PIXIV] [DB:PixivRankingImage] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`
     );
@@ -658,25 +659,32 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
     const randomImageIndex = Math.floor(
       Math.random() * filteredImageList.length
     ); // 随机选取图片
-    const targetImageItem = filteredImageList[randomImageIndex];
+    let targetImageItem: PixivRankingImage | null =
+      filteredImageList[randomImageIndex];
+    const { title, user_name } = targetImageItem;
     const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
     console.log(
       `[PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`
     );
 
-    const targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
+    let targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
 
     if (!targetArtwork) {
       return targetArtwork;
     }
 
     // 获取图片 url
-    const imageSrc = targetArtwork.urls.regular;
-    const url = imageSrc.replace("i.pximg.net", "i.pixiv.cat");
+    // const imageSrc = targetArtwork.urls.regular;
+    const url = fileURL2PixivReURL(targetArtwork.urls.original); // 转换成直达链接
+
+    targetArtwork = null;
+    filteredImageList = [];
+    targetImageItem = null;
+    imageList = [];
 
     return {
-      title: targetImageItem.title,
-      artist: targetImageItem.user_name,
+      title,
+      artist: user_name,
       link: artworkUrl,
       base64: url,
     } as PixivImage;

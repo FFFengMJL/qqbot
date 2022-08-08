@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from "axios";
 import { format } from "date-fns";
-import { logError } from "../utils/error";
+import { logError } from "../../utils/error";
 
 /**
  * 与图片反代的链接，需要代理
@@ -21,12 +21,12 @@ const pixivCat = axios.create({
 
 /**
  * 通过 url 获取图片并转换成 base64 字符串
- * @param url 未经过转换的 url，以 https://i.pixiv.net 域名开头
+ * @param url 未经过转换的 url，以 https://i.pximg.net 域名开头
  * @returns
  */
 export async function getPixivImageToBase64FromPixivCat(url: string) {
   try {
-    const pixivCatUrl = url.replace("i.pximg.net", "i.pixiv.re");
+    const pixivCatUrl = url.replace("i.pximg.net", "i.pixiv.cat");
     console.log(`[PIXIV] url: ${pixivCatUrl}`);
     const fileResponse = await pixivCat.get(pixivCatUrl);
     console.log(
@@ -58,7 +58,7 @@ export async function getPixivImageToBase64FromPixivCat(url: string) {
  */
 export async function getPixivImageBufferFromPixivCat(url: string) {
   try {
-    const pixivCatUrl = url.replace("i.pximg.net", "i.pixiv.re");
+    const pixivCatUrl = url.replace("i.pximg.net", "i.pixiv.cat");
     console.log(`[PIXIV] url: ${pixivCatUrl}`);
     const fileResponse = await pixivCat.get(pixivCatUrl);
     console.log(

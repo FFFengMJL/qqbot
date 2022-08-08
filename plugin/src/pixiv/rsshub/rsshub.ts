@@ -1,7 +1,7 @@
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { PixivImage } from "../pixiv.type";
-import { getPixivImageToBase64FromPixivCat } from "../pixivCat";
+import { getPixivImageToBase64FromPixivCat } from "../pixivRE/pixivCat";
 import { RSSHubPixivRankingDate, RSSHubPixivRankingMode } from "./rsshub.type";
 import { PrismaClient, RSSHubPixivBookmarkIllust } from "@prisma/client";
 import { load } from "cheerio";
@@ -17,6 +17,19 @@ const RSSHubClient = axios.create({
   },
   baseURL: "https://nas.mxcoras.vip:9243",
   timeout: 5000,
+});
+
+const OriginalRSSHubClient = axios.create({
+  headers: {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37",
+  },
+  baseURL: "http://rsshub.app",
+  timeout: 5000,
+  proxy: {
+    host: "127.0.0.1",
+    port: 7890,
+  },
 });
 
 const RSSuhPixivBookmarkDBClient = new PrismaClient().rSSHubPixivBookmarkIllust;
@@ -105,6 +118,24 @@ export async function getRandomImageWithRSSHub(
 export async function getBookmarksFromRSSHub(userId: number) {
   try {
     const response = await RSSHubClient.get(`/pixiv/user/bookmarks/${userId}`);
+    if (response.status !== 200) return null;
+
+    return response.data as string;
+  } catch (error: any) {
+    return logError(error);
+  }
+}
+
+/**
+ * 从 RSSHub 获取特定用户的收藏
+ * @param userId 用户 id, 可在用户主页 URL 中找到
+ * @returns xml 字符串
+ */
+export async function getBookmarksFromOriginalRSSHub(userId: number) {
+  try {
+    const response = await OriginalRSSHubClient.get(
+      `/pixiv/user/bookmarks/${userId}`
+    );
     if (response.status !== 200) return null;
 
     return response.data as string;
