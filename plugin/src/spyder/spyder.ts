@@ -257,9 +257,9 @@ export async function spyRSSHubPixivBookmark(
       const url = load(item.description)("img").eq(0).attr("src");
       if (!url) return;
       const directLink = fileURL2PixivReURL(url);
-      let imageBuffer = await getPixivImageBufferFromPixivCat(directLink);
+      let imageBuffer = await getPixivImageBufferFromPixivCat(url);
       while (!imageBuffer) {
-        imageBuffer = await getPixivImageBufferFromPixivCat(directLink);
+        imageBuffer = await getPixivImageBufferFromPixivCat(url);
       }
       const blurImage = (
         await sharp(imageBuffer).blur(blurParam).toBuffer()

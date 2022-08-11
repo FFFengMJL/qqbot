@@ -659,7 +659,7 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
     const randomImageIndex = Math.floor(
       Math.random() * filteredImageList.length
     ); // 随机选取图片
-    let targetImageItem: PixivRankingImage | null =
+    const targetImageItem: PixivRankingImage | null =
       filteredImageList[randomImageIndex];
     const { title, user_name } = targetImageItem;
     const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
@@ -676,11 +676,6 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
     // 获取图片 url
     // const imageSrc = targetArtwork.urls.regular;
     const url = fileURL2PixivReURL(targetArtwork.urls.original); // 转换成直达链接
-
-    targetArtwork = null;
-    filteredImageList = [];
-    targetImageItem = null;
-    imageList = [];
 
     return {
       title,

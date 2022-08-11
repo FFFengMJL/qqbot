@@ -65,7 +65,7 @@ export async function sendNowTime(
 export async function sendNowTime_V2(
   targetType: MessageType,
   targetId: Number,
-  pixivRankLimit: number = 0
+  pixivRankLimit: number = 100
 ) {
   const randomPixivImage = await getRandomImageWithPixivFromDB_V2(
     pixivRankLimit

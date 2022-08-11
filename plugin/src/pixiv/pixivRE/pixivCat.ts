@@ -58,7 +58,9 @@ export async function getPixivImageToBase64FromPixivCat(url: string) {
  */
 export async function getPixivImageBufferFromPixivCat(url: string) {
   try {
-    const pixivCatUrl = url.replace("i.pximg.net", "i.pixiv.cat");
+    const pixivCatUrl = url
+      .replace("i.pximg.net", "i.pixiv.cat")
+      .replace("pixiv.rsshub.app", "i.pixiv.cat");
     console.log(`[PIXIV] url: ${pixivCatUrl}`);
     const fileResponse = await pixivCat.get(pixivCatUrl);
     console.log(
