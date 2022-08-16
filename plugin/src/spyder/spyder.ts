@@ -227,9 +227,9 @@ export async function spyRSSHubPixivBookmark(
 ) {
   // 从 RSSHub 获取 xml
   console.log(`[SPYDER] [RSSHUB] get xml`);
-  let xmlString = await getBookmarksFromRSSHub(userId);
+  let xmlString = await getBookmarksFromOriginalRSSHub(userId);
   if (!xmlString) {
-    xmlString = await getBookmarksFromOriginalRSSHub(userId);
+    xmlString = await getBookmarksFromRSSHub(userId);
   }
 
   if (!xmlString) return xmlString;

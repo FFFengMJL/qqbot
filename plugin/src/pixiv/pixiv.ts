@@ -21,6 +21,7 @@ import {
   TYPE_FILTER,
 } from "../pixiv_filter";
 import { fileURL2PixivReURL } from "./pixivRE/pixivRe";
+import { str as CRC32Str } from "crc-32";
 
 const PixivDBClient = {
   pixivRankingImage: new PrismaClient().pixivRankingImage,
@@ -650,22 +651,24 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
       });
     }
     // 筛选图片列表
-    let filteredImageList = filterImageListFromDB(imageList);
+    const filteredImageList = filterImageListFromDB(imageList);
     console.log(
       `[PIXIV] [DB:PixivRankingImage] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`
     );
 
-    // 随机选取图片
-    const randomImageIndex = Math.floor(
-      Math.random() * filteredImageList.length
-    ); // 随机选取图片
-    const targetImageItem: PixivRankingImage | null =
+    const randomImageIndex =
+      Math.abs(CRC32Str(now.toLocaleString(), now.getTime())) %
+      filteredImageList.length; // 随机选取图片
+    const targetImageItem: PixivRankingImage =
       filteredImageList[randomImageIndex];
+
+    console.log(
+      `[PIXIV] date[${rankDay}] timeStamp[${now.getTime()}] randomIndex[${randomImageIndex}] `
+    );
+
     const { title, user_name } = targetImageItem;
     const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
-    console.log(
-      `[PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`
-    );
+    console.log(`[PIXIV] artworkUrl[${artworkUrl}]`);
 
     let targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
 
