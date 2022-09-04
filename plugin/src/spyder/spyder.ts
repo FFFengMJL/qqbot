@@ -47,8 +47,8 @@ export async function spyFF14(targetList: TargetList) {
       // 新闻不存在，也没有报错的情况
       if (!isExist) {
         unaddedNew.push(item);
-        targetList.forEach(async ({ messageType, targetId }) => {
-          await sendNews(messageType, targetId, item);
+        targetList.forEach(({ messageType, targetId }) => {
+          return sendNews(messageType, targetId, item);
         });
       }
     }
@@ -223,7 +223,7 @@ export async function spyPixivRanking(
 export async function spyRSSHubPixivBookmark(
   userId: number,
   targetList: TargetList,
-  blurParam: number = Math.random() * 2 + 4
+  blurParam: number = Math.random() * 2 + 7
 ) {
   // 从 RSSHub 获取 xml
   console.log(`[SPYDER] [RSSHUB] get xml`);
