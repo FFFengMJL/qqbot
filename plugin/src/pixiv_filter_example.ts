@@ -11,6 +11,7 @@ export const TAG_EXCLUDE_FILTER = [
   "4コマ",
   "ケモナー",
   "4コマ漫画",
+  "188男团",
 ];
 
 export const TYPE_FILTER: Partial<IllustContentType> = {
@@ -22,4 +23,6 @@ export const TYPE_FILTER: Partial<IllustContentType> = {
   furry: false,
 };
 
-export const ILLUST_TYPE_FILETER = ["1"];
+export const ILLUST_TYPE_FILTER = ["1"];
+
+export const ILLUSTOR_FILTER = ["36762442", "908878", "12613821"];
