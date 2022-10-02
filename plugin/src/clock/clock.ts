@@ -1,7 +1,10 @@
 import { CronJob } from "cron";
 import { DateTime } from "luxon";
 import { format } from "date-fns";
-import { getRandomImageWithPixivFromDB_V2 } from "../pixiv/pixiv";
+import {
+  getRandomImageWithPixivFromDB,
+  getRandomImageWithPixivFromDB_V2,
+} from "../pixiv/pixiv";
 import { Message, sendMessage, MessageType } from "./../http/http";
 
 /**
@@ -13,14 +16,14 @@ import { Message, sendMessage, MessageType } from "./../http/http";
 export function initClock(
   targetList: Array<{ targetType: MessageType; targetId: Number }>,
   pixivRankLimit: number = 0,
-  cronTime: string | Date | DateTime = "0 0 * * * *"
+  cronTime: string | Date | DateTime = "0 0 * * * *",
 ) {
   try {
     console.log(`[INIT] [CLOCK] Set a Clock
   cronTime: [${cronTime}]
   targetList [
     ${targetList
-      .map((target) => `targetType ${target.targetType} ${target.targetId}`)
+      .map(target => `targetType ${target.targetType} ${target.targetId}`)
       .join("\n    ")}
   ]`);
     return new CronJob(cronTime, () => clock(targetList, pixivRankLimit));
@@ -38,7 +41,7 @@ export function initClock(
  */
 export async function clock(
   targetList: Array<{ targetType: MessageType; targetId: Number }>,
-  pixivRankLimit: number = 0
+  pixivRankLimit: number = 0,
 ) {
   const now = new Date();
   const postMessage: Message = [
@@ -54,9 +57,11 @@ export async function clock(
     },
   ];
 
-  const randomPixivImage = await getRandomImageWithPixivFromDB_V2(
-    pixivRankLimit
-  );
+  // const randomPixivImage = await getRandomImageWithPixivFromDB_V2(
+  //   pixivRankLimit
+  // );
+
+  const randomPixivImage = await getRandomImageWithPixivFromDB(pixivRankLimit);
 
   if (!!randomPixivImage) {
     const randomPixivImageMessage: Message = [
@@ -81,12 +86,12 @@ export async function clock(
   }
 
   targetList.forEach(({ targetType, targetId }) => {
-    return sendMessage(targetType, targetId, postMessage).then((result) => {
+    return sendMessage(targetType, targetId, postMessage).then(result => {
       console.log(
         `[${format(
           now,
-          "yyyy-MM-dd HH:mm:ss"
-        )}] [CLOCK] send [${targetType}] [${targetId}] [${result?.status}]`
+          "yyyy-MM-dd HH:mm:ss",
+        )}] [CLOCK] send [${targetType}] [${targetId}] [${result?.status}]`,
       );
     });
   });
