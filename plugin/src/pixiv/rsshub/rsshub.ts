@@ -7,18 +7,6 @@ import { PrismaClient, RSSHubPixivBookmarkIllust } from "@prisma/client";
 import { load } from "cheerio";
 import { logError } from "../../utils/error";
 
-/**
- * 对 rsshub 的连接，用户获取 pixiv 榜单
- */
-const RSSHubClient = axios.create({
-  headers: {
-    "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.5060.53 Safari/537.36 Edg/103.0.1264.37",
-  },
-  baseURL: "https://nas.mxcoras.vip:9243",
-  timeout: 5000,
-});
-
 const OriginalRSSHubClient = axios.create({
   headers: {
     "User-Agent":
@@ -35,98 +23,6 @@ const OriginalRSSHubClient = axios.create({
 const RSSuhPixivBookmarkDBClient = new PrismaClient().rSSHubPixivBookmarkIllust;
 
 /**
- * 从 rsshub 获取榜单
- * @param mode 榜单类型
- * @param date 榜单日期（可选）
- * @returns xml 字符串
- */
-export async function getPixivRankListFromRSShub(
-  mode: RSSHubPixivRankingMode,
-  date?: RSSHubPixivRankingDate
-) {
-  try {
-    const response = await RSSHubClient.get("/pixiv/ranking/", {
-      params: {
-        mode,
-        date,
-      },
-    });
-
-    // 如果状态码不是200，则返回 undefined
-    if (response.status !== 200) return undefined;
-    return response.data as string;
-  } catch (error: any) {
-    return logError(error);
-  }
-}
-
-/**
- * 从 RSSHub 获取日榜图片列表并以此获取一张 pixiv 图片
- * @param mode 榜单类型
- * @param date 榜单日期（可选）
- * @returns 对应图片的 base64 字符串
- */
-export async function getRandomImageWithRSSHub(
-  mode: RSSHubPixivRankingMode = "day",
-  date?: RSSHubPixivRankingDate
-) {
-  // 获取列表
-  const responseString = await getPixivRankListFromRSShub(mode, date);
-
-  if (!responseString) {
-    return undefined;
-  }
-
-  // 解析 xml，得到 item 标签的列表
-  const items = cheerio.load(responseString, {
-    xmlMode: true,
-  })("item");
-
-  console.log(`[PIXIV] itemListLength: ${items.length}`);
-
-  const index = Math.floor(Math.random() * items.length); // 随机选择
-
-  const artist = items.eq(index).find("author").text(); // 作者
-  const link = items.eq(index).find("link").text(); // 作品链接
-  const title = items
-    .eq(index)
-    .find("title")
-    .text()
-    .split(" ")
-    .slice(1)
-    .join(" "); // 作品名
-  const imgSrc = cheerio.load(items.eq(index).text())("img").attr("src"); // 获取图片链接
-
-  if (!imgSrc) return undefined;
-
-  const imgCatUrl = imgSrc.replace("i.pximg.net", "i.pixiv.cat"); // 对域名进行替换
-  const base64 = await getPixivImageToBase64FromPixivCat(imgCatUrl); // 得到 base64 字符串
-
-  return {
-    artist,
-    link,
-    base64,
-    title,
-  } as PixivImage;
-}
-
-/**
- * 从 RSSHub 获取特定用户的收藏
- * @param userId 用户 id, 可在用户主页 URL 中找到
- * @returns xml 字符串
- */
-export async function getBookmarksFromRSSHub(userId: number) {
-  try {
-    const response = await RSSHubClient.get(`/pixiv/user/bookmarks/${userId}`);
-    if (response.status !== 200) return null;
-
-    return response.data as string;
-  } catch (error: any) {
-    return logError(error);
-  }
-}
-
-/**
  * 从 RSSHub 获取特定用户的收藏
  * @param userId 用户 id, 可在用户主页 URL 中找到
  * @returns xml 字符串
@@ -134,7 +30,7 @@ export async function getBookmarksFromRSSHub(userId: number) {
 export async function getBookmarksFromOriginalRSSHub(userId: number) {
   try {
     const response = await OriginalRSSHubClient.get(
-      `/pixiv/user/bookmarks/${userId}`
+      `/pixiv/user/bookmarks/${userId}`,
     );
     if (response.status !== 200) return null;
 
@@ -163,7 +59,7 @@ export function parseRSSHubPixivBookmarkXML(xml: string) {
     const description = item.find("description").text();
     const link = item.find("link").text();
     const illustId = Number(
-      link.replace("https://www.pixiv.net/artworks/", "")
+      link.replace("https://www.pixiv.net/artworks/", ""),
     );
     const author = load(description)("p")
       .first()
