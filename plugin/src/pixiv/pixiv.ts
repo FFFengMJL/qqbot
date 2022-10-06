@@ -453,10 +453,16 @@ export async function isPixivRankingImageItemExistInDB(
 /**
  * 从数据库中获取当天日榜随机图片
  * @param maxLimit 最大排名
+ * @param optionMessage 混淆用字符串
  * @returns
  */
-export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
+export async function getRandomImageWithPixivFromDB(
+  maxLimit: number = 500,
+  optionMessage?: string,
+) {
   try {
+    console.log(`[PIXIV] optionMessage: [${optionMessage}]`);
+
     // 获取一页列表
 
     const now = new Date();
@@ -488,8 +494,12 @@ export async function getRandomImageWithPixivFromDB(maxLimit: number = 500) {
     );
 
     const randomImageIndex =
-      Math.abs(CRC32Str(now.toLocaleString(), now.getTime())) %
-      filteredImageList.length; // 随机选取图片
+      Math.abs(
+        CRC32Str(
+          (optionMessage ?? "") + now.toLocaleString(),
+          Math.floor(Math.random() * now.getTime()),
+        ),
+      ) % filteredImageList.length; // 随机选取图片
     const targetImageItem = filteredImageList[randomImageIndex];
     const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
     console.log(
@@ -625,12 +635,17 @@ export async function deletePixivRankingItem(illustId: number) {
 /**
  * 从数据库中获取当天日榜随机图片
  * @param maxLimit 最大排名
+ * @param optionMessage 混淆用参数
  * @returns
  */
-export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
+export async function getRandomImageWithPixivFromDB_V2(
+  maxLimit: number = 500,
+  optionMessage?: string,
+) {
   try {
-    // 获取一页列表
+    console.log(`[PIXIV] optionMessage: [${optionMessage}]`);
 
+    // 获取一页列表
     const now = new Date();
     let rankDay = format(subDays(now, 1), "yyyyMMdd");
     let imageList = await PixivDBClient.pixivRankingImage.findMany({
@@ -660,8 +675,12 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
     );
 
     const randomImageIndex =
-      Math.abs(CRC32Str(now.toLocaleString(), now.getTime())) %
-      filteredImageList.length; // 随机选取图片
+      Math.abs(
+        CRC32Str(
+          (optionMessage ?? "") + now.toLocaleString(),
+          Math.floor(Math.random() * now.getTime()),
+        ),
+      ) % filteredImageList.length; // 随机选取图片
     const targetImageItem: PixivRankingImage =
       filteredImageList[randomImageIndex];
 

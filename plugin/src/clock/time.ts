@@ -13,9 +13,13 @@ import { Message, MessageType, sendMessage } from "./../http/http";
 export async function sendNowTime(
   targetType: MessageType,
   targetId: Number,
-  pixivRankLimit: number = 100
+  pixivRankLimit: number = 100,
+  optionMessage?: string,
 ) {
-  const randomPixivImage = await getRandomImageWithPixivFromDB(pixivRankLimit);
+  const randomPixivImage = await getRandomImageWithPixivFromDB(
+    pixivRankLimit,
+    optionMessage,
+  );
 
   const nowTime: Message = [
     {
@@ -65,10 +69,12 @@ export async function sendNowTime(
 export async function sendNowTime_V2(
   targetType: MessageType,
   targetId: Number,
-  pixivRankLimit: number = 100
+  pixivRankLimit: number = 100,
+  optionMessage?: string,
 ) {
   const randomPixivImage = await getRandomImageWithPixivFromDB_V2(
-    pixivRankLimit
+    pixivRankLimit,
+    optionMessage,
   );
 
   const nowTime: Message = [
