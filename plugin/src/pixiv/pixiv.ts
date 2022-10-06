@@ -275,12 +275,12 @@ export async function getRandomImageWithPixiv(
  */
 export function filterImageList(imageList: Array<PixivRankingImageItem>) {
   return imageList.filter(item => {
-    const tagCheck = !item.tags.some(tag => TAG_EXCLUDE_FILTER.includes(tag)); // 不含有对应的 tag
+    const tagCheck = !item.tags.some(tag => TAG_EXCLUDE_FILTER.get(tag)); // 不含有对应的 tag
     const typeCheck = Object.keys(TYPE_FILTER).every(_ => {
       const type = _ as keyof typeof TYPE_FILTER;
       return TYPE_FILTER[type] === item.illust_content_type[type];
     }); // 符合 type 的要求
-    const illustTypeCheck = !ILLUST_TYPE_FILTER.includes(item.illust_type);
+    const illustTypeCheck = !ILLUST_TYPE_FILTER.get(item.illust_type);
 
     // console.log(tagCheck, typeCheck);
     return tagCheck && typeCheck && illustTypeCheck;
@@ -296,13 +296,13 @@ export function filterImageListFromDB(imageList: Array<PixivRankingImage>) {
   return imageList.filter(item => {
     const tagCheck = !item.tags
       .split(",")
-      .some(tag => TAG_EXCLUDE_FILTER.includes(tag)); // 不含有对应的 tag
+      .some(tag => TAG_EXCLUDE_FILTER.get(tag)); // 不含有对应的 tag
     const typeCheck = Object.keys(TYPE_FILTER).every(_ => {
       const type = _ as keyof typeof TYPE_FILTER;
       return TYPE_FILTER[type] === item[type];
     }); // 符合 type 的要求
-    const illustTypeCheck = !ILLUST_TYPE_FILTER.includes(item.illust_type);
-    const illustorCheck = !ILLUSTOR_FILTER.includes(String(item.user_id));
+    const illustTypeCheck = !ILLUST_TYPE_FILTER.get(item.illust_type);
+    const illustorCheck = !ILLUSTOR_FILTER.get(String(item.user_id));
 
     // console.log(tagCheck, typeCheck);
     return tagCheck && typeCheck && illustTypeCheck && illustorCheck;
