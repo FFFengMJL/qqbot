@@ -12,7 +12,10 @@ import {
 import axios from "axios";
 import * as cheerio from "cheerio";
 import { get as ObjectGet } from "lodash";
-import { getPixivImageToBase64FromPixivCat } from "./pixivRE/pixivCat";
+import {
+  fileURL2PixivCatURL,
+  getPixivImageToBase64FromPixivCat,
+} from "./pixivRE/pixivCat";
 import { PixivRankingImage, PrismaClient } from "@prisma/client";
 import { logError } from "../utils/error";
 import {
@@ -21,7 +24,6 @@ import {
   TAG_EXCLUDE_FILTER,
   TYPE_FILTER,
 } from "../pixiv_filter";
-import { fileURL2PixivReURL } from "./pixivRE/pixivRe";
 import { str as CRC32Str } from "crc-32";
 
 const PixivDBClient = {
@@ -679,7 +681,8 @@ export async function getRandomImageWithPixivFromDB_V2(maxLimit: number = 500) {
 
     // 获取图片 url
     // const imageSrc = targetArtwork.urls.regular;
-    const url = fileURL2PixivReURL(targetArtwork.urls.original); // 转换成直达链接
+    // const url = fileURL2PixivReURL(targetArtwork.urls.original); // 转换成直达链接
+    const url = fileURL2PixivCatURL(targetArtwork.urls.regular); // 转换成直达链接
 
     return {
       title,

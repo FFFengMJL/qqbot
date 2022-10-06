@@ -1,10 +1,7 @@
 import { CronJob } from "cron";
 import { DateTime } from "luxon";
 import { format } from "date-fns";
-import {
-  getRandomImageWithPixivFromDB,
-  getRandomImageWithPixivFromDB_V2,
-} from "../pixiv/pixiv";
+import { getRandomImageWithPixivFromDB_V2 } from "../pixiv/pixiv";
 import { Message, sendMessage, MessageType } from "./../http/http";
 
 /**
@@ -61,7 +58,9 @@ export async function clock(
   //   pixivRankLimit
   // );
 
-  const randomPixivImage = await getRandomImageWithPixivFromDB(pixivRankLimit);
+  const randomPixivImage = await getRandomImageWithPixivFromDB_V2(
+    pixivRankLimit,
+  );
 
   if (!!randomPixivImage) {
     const randomPixivImageMessage: Message = [

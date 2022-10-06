@@ -30,7 +30,7 @@ export async function getPixivImageToBase64FromPixivCat(url: string) {
     console.log(`[PIXIV] url: ${pixivCatUrl}`);
     const fileResponse = await pixivCat.get(pixivCatUrl);
     console.log(
-      `[PIXIV] pixiv.cat response: ${fileResponse.status} ${fileResponse.data.length}`
+      `[PIXIV] pixiv.cat response: ${fileResponse.status} ${fileResponse.data.length}`,
     );
     if (fileResponse.status !== 200) {
       return undefined;
@@ -39,12 +39,12 @@ export async function getPixivImageToBase64FromPixivCat(url: string) {
     console.log(
       `[PIXIV] [BASE64] start [${format(
         new Date(),
-        "yyyy-MM-dd HH:mm:ss:SSS"
-      )}]`
+        "yyyy-MM-dd HH:mm:ss:SSS",
+      )}]`,
     );
 
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
-      "base64"
+      "base64",
     )}`;
   } catch (error: any) {
     return logError(error);
@@ -64,7 +64,7 @@ export async function getPixivImageBufferFromPixivCat(url: string) {
     console.log(`[PIXIV] url: ${pixivCatUrl}`);
     const fileResponse = await pixivCat.get(pixivCatUrl);
     console.log(
-      `[PIXIV] pixiv.cat response: ${fileResponse.status} ${fileResponse.data.length}`
+      `[PIXIV] pixiv.cat response: ${fileResponse.status} ${fileResponse.data.length}`,
     );
     if (fileResponse.status !== 200) {
       return undefined;
@@ -73,12 +73,25 @@ export async function getPixivImageBufferFromPixivCat(url: string) {
     console.log(
       `[PIXIV] [BUFFER] start [${format(
         new Date(),
-        "yyyy-MM-dd HH:mm:ss:SSS"
-      )}]`
+        "yyyy-MM-dd HH:mm:ss:SSS",
+      )}]`,
     );
 
     return Buffer.from(fileResponse.data, "binary");
   } catch (error: any) {
     return logError(error);
   }
+}
+
+/**
+ * 把原图链接转换为 pixiv.cat 的直达链接
+ * @param url i.pximg.net/pixiv.rsshub.app 等前缀，后面类似 /img-original/img/2022/08/07/23/38/17/100313331_p0.png 的链接
+ * @returns
+ */
+export function fileURL2PixivCatURL(url: string) {
+  const pixivCatUrl = url
+    .replace("i.pximg.net", "i.pixiv.cat")
+    .replace("pixiv.rsshub.app", "i.pixiv.cat");
+  console.log(`[PIXIV] url: ${pixivCatUrl}`);
+  return pixivCatUrl;
 }
