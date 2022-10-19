@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Catagory, New, ResponseArticle, NewsResponse } from "./news.type";
 import { isEqual } from "date-fns";
-
+import { logError } from "../utils/error";
 import { PrismaClient } from "@prisma/client";
 
 const newsDBClient = new PrismaClient().news;
@@ -27,12 +27,12 @@ export async function getNewsList(
   categorys: Array<Catagory> = [5309, 5310, 5311, 5312, 5313],
   pageSize: number = 10,
   pageIndex: number = 0,
-  gameCode: string = "ff"
+  gameCode: string = "ff",
 ) {
   const response = await FF14ChineClent.get(
     `?url=List?gameCode=${gameCode}&category=${categorys.join(
-      ","
-    )}&pageIndex=${pageIndex}&pageSize=${pageSize}`
+      ",",
+    )}&pageIndex=${pageIndex}&pageSize=${pageSize}`,
   );
   return response.data as NewsResponse;
 }
@@ -45,7 +45,7 @@ export async function getNewsList(
  */
 export async function getArticle(id: number, gameCode: string = "ff") {
   const response = await FF14ChineClent.get(
-    `?url=detail?gameCode=${gameCode}&id=${id}`
+    `?url=detail?gameCode=${gameCode}&id=${id}`,
   );
 
   return response.data as ResponseArticle;
@@ -126,5 +126,26 @@ export async function getNewsCount() {
   } catch (error) {
     console.error(error);
     return undefined;
+  }
+}
+
+/**
+ * 获取新闻主页的图片
+ * @param url
+ * @return 返回 base64 格式的字符串
+ */
+export async function getHomeImageBase64(url: string) {
+  try {
+    const { status, data } = await FF14ChineClent.get(url, {
+      responseType: "arraybuffer",
+    });
+
+    if (status !== 200) {
+      return undefined;
+    }
+
+    return `base64://${Buffer.from(data, "binary").toString("base64")}`;
+  } catch (error) {
+    return logError(error);
   }
 }

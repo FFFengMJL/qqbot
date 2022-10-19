@@ -3,6 +3,7 @@ import { RSSHubPixivBookmarkIllust } from "@prisma/client";
 import { format } from "date-fns-tz";
 import { MessageType, Message, sendMessage, TargetList } from "./../http/http";
 import {
+  getHomeImageBase64,
   getNewsCount,
   getNewsList,
   isNewExistInDB,
@@ -29,8 +30,7 @@ import { fileURL2PixivReURL } from "../pixiv/pixivRE/pixivRe";
 
 /**
  * 进行一次完整的流程：获取官网数据 -> 对比是否存在新消息 -> 发送新消息
- * @param messageType
- * @param targetId
+ * @param targetList 目标列表
  * @returns
  */
 export async function spyFF14(targetList: TargetList) {
@@ -46,9 +46,7 @@ export async function spyFF14(targetList: TargetList) {
       // 新闻不存在，也没有报错的情况
       if (!isExist) {
         unaddedNew.push(item);
-        targetList.forEach(({ messageType, targetId }) => {
-          return sendNews(messageType, targetId, item);
-        });
+        sendNews(targetList, item);
       }
     }
 
@@ -102,23 +100,13 @@ export function initFF14Spyder(
 
 /**
  * 将新的新闻发送给对应的群/私聊
- * @param messgeType 消息类型（私聊/群聊）
- * @param targetId 目标 ID
+ * @param targetIdList 目标列表
  * @param news 对应的新闻
  * @returns
  */
-export async function sendNews(
-  messgeType: MessageType,
-  targetId: Number,
-  news: New,
-) {
+export async function sendNews(targetIdList: TargetList, news: New) {
+  const homeImage = await getHomeImageBase64(news.HomeImagePath);
   const message: Message = [
-    {
-      type: "image",
-      data: {
-        file: news.HomeImagePath,
-      },
-    },
     {
       type: "text",
       data: {
@@ -130,7 +118,19 @@ export async function sendNews(
       },
     },
   ];
-  return await sendMessage(messgeType, targetId, message);
+
+  if (!!homeImage) {
+    message.unshift({
+      type: "image",
+      data: {
+        file: homeImage,
+      },
+    });
+  }
+
+  return targetIdList.map(({ targetId, messageType }) =>
+    sendMessage(messageType, targetId, message),
+  );
 }
 
 /**
