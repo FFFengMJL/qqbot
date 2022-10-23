@@ -277,15 +277,25 @@ export async function getRandomImageWithPixiv(
  */
 export function filterImageList(imageList: Array<PixivRankingImageItem>) {
   return imageList.filter(item => {
-    const tagCheck = !item.tags.some(tag => TAG_EXCLUDE_FILTER.get(tag)); // 不含有对应的 tag
-    const typeCheck = Object.keys(TYPE_FILTER).every(_ => {
-      const type = _ as keyof typeof TYPE_FILTER;
-      return TYPE_FILTER[type] === item.illust_content_type[type];
-    }); // 符合 type 的要求
-    const illustTypeCheck = !ILLUST_TYPE_FILTER.get(item.illust_type);
+    // 短路操作
 
-    // console.log(tagCheck, typeCheck);
-    return tagCheck && typeCheck && illustTypeCheck;
+    // tag 判断,不含有对应的 tag
+    if (item.tags.some(tag => TAG_EXCLUDE_FILTER.has(tag))) return false;
+
+    // 作者过滤
+    if (ILLUSTOR_FILTER.has(String(item.illust_id))) return false;
+
+    // 图片内容类型判断
+    const typeCheckFail = Object.keys(TYPE_FILTER).some(_ => {
+      const type = _ as keyof typeof TYPE_FILTER;
+      return TYPE_FILTER[type] !== item.illust_content_type[type];
+    }); // 符合 type 的要求
+    if (typeCheckFail) return false;
+
+    // 作品类型判断
+    if (ILLUST_TYPE_FILTER.has(item.illust_type)) return false;
+
+    return true;
   });
 }
 
@@ -296,18 +306,28 @@ export function filterImageList(imageList: Array<PixivRankingImageItem>) {
  */
 export function filterImageListFromDB(imageList: Array<PixivRankingImage>) {
   return imageList.filter(item => {
-    const tagCheck = !item.tags
-      .split(",")
-      .some(tag => TAG_EXCLUDE_FILTER.get(tag)); // 不含有对应的 tag
-    const typeCheck = Object.keys(TYPE_FILTER).every(_ => {
-      const type = _ as keyof typeof TYPE_FILTER;
-      return TYPE_FILTER[type] === item[type];
-    }); // 符合 type 的要求
-    const illustTypeCheck = !ILLUST_TYPE_FILTER.get(item.illust_type);
-    const illustorCheck = !ILLUSTOR_FILTER.get(String(item.user_id));
+    // 短路操作
 
-    // console.log(tagCheck, typeCheck);
-    return tagCheck && typeCheck && illustTypeCheck && illustorCheck;
+    // tag 判断
+    const tagCheckFail = item.tags
+      .split(",")
+      .some(tag => TAG_EXCLUDE_FILTER.has(tag)); // 含有对应的 tag
+    if (tagCheckFail) return false;
+
+    // 作者过滤
+    if (ILLUSTOR_FILTER.has(String(item.user_id))) return false;
+
+    // 作品内容类型检查
+    const typeCheckFail = Object.keys(TYPE_FILTER).some(_ => {
+      const type = _ as keyof typeof TYPE_FILTER;
+      return TYPE_FILTER[type] !== item[type];
+    }); // 不符合 type 的要求
+    if (typeCheckFail) return false;
+
+    // 作品类型检查
+    if (ILLUST_TYPE_FILTER.has(item.illust_type)) return false;
+
+    return true;
   });
 }
 
