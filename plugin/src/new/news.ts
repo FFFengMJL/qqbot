@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Catagory, New, ResponseArticle, NewsResponse } from "./news.type";
-import { isEqual } from "date-fns";
+import dayjs from "dayjs";
 import { logError } from "../utils/error";
 import { PrismaClient } from "@prisma/client";
 
@@ -71,7 +71,7 @@ export async function isNewExistInDB(singleNew: New) {
 
     // 如果存在，则需要比较发布日期
     const currentDate = new Date(singleNew.PublishDate);
-    return isEqual(targetNew.PublishDate, currentDate);
+    return dayjs(currentDate).isSame(targetNew.PublishDate);
   } catch (error) {
     console.error(error);
     return undefined;

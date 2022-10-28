@@ -1,5 +1,5 @@
 import { spawnSync } from "child_process";
-import { format, parse, subDays } from "date-fns";
+import dayjs from "dayjs";
 import { accessSync, constants } from "fs";
 import { Message, sendMessage, TargetList } from "../http/http";
 import { getRankImages } from "../pixiv/pixiv";
@@ -23,7 +23,7 @@ export function generateWordCloudWithText(
   targetFilePath: string = "plugin/file/wordCloud/image",
   targetFilename: string = "tmp.png",
   pythonFilePath: string = "plugin/src/wordCloud",
-  pythonFilename: string = "wordCloud.py"
+  pythonFilename: string = "wordCloud.py",
 ) {
   console.log(`[WORD_CLOUD] start: 
   pythonFile [${pythonFilePath}/${pythonFilename}]
@@ -65,7 +65,7 @@ async function generateWordCloudWithPixivRankImage(
   fontPath: string = "plugin/file/wordCloud/font/sarasa-ui-sc-regular.ttf",
   targetFilePath: string = "plugin/file/wordCloud/image",
   pythonFilePath: string = "plugin/src/wordCloud",
-  pythonFilename: string = "wordCloud.py"
+  pythonFilename: string = "wordCloud.py",
 ) {
   const imageList = await getRankImages(rankDate, rankLimit);
 
@@ -78,7 +78,7 @@ async function generateWordCloudWithPixivRankImage(
     targetFilePath,
     `${rankDate}_${rankLimit}.png`,
     pythonFilePath,
-    pythonFilename
+    pythonFilename,
   );
 
   return imagePath;
@@ -93,7 +93,7 @@ async function generateWordCloudWithPixivRankImage(
 export async function getWordCloudWithRankImage(
   rankDate: string,
   rankLimit: number = 500,
-  targetFilePath: string = "plugin/file/wordCloud/image"
+  targetFilePath: string = "plugin/file/wordCloud/image",
 ) {
   const imagePath = `${targetFilePath}/${rankDate}_${rankLimit}.png`;
 
@@ -112,7 +112,7 @@ export async function getWordCloudWithRankImage(
       rankDate,
       rankLimit,
       undefined,
-      targetFilePath
+      targetFilePath,
     );
 
     if (!wordCloudImage) return null;
@@ -132,19 +132,17 @@ export async function getWordCloudWithRankImage(
  */
 export async function sendCurrentWordCloud(
   targetList: TargetList,
-  rankLimit: number = 500
+  rankLimit: number = 500,
 ) {
   let message: Message = [];
 
   try {
-    const now = new Date();
-    let rankDate = subDays(now, 1);
-    let rankDateString = format(rankDate, "yyyyMMdd");
+    const now = dayjs();
+    let rankDateString = now.subtract(1, "day").format("YYYYMMDD");
     let wordCloud = await getWordCloudWithRankImage(rankDateString, rankLimit);
 
     if (!wordCloud) {
-      rankDate = subDays(now, 2);
-      rankDateString = format(rankDate, "yyyyMMdd");
+      rankDateString = now.subtract(2, "day").format("YYYYMMDD");
       wordCloud = await getWordCloudWithRankImage(rankDateString, rankLimit);
     }
 
@@ -154,9 +152,8 @@ export async function sendCurrentWordCloud(
       {
         type: "text",
         data: {
-          text: `${format(
-            rankDate,
-            "yyyy年MM月dd日"
+          text: `${now.format(
+            "YYYY年M月D日",
           )} 的前 ${rankLimit} 名作品词云为：\n`,
         },
       },
@@ -197,25 +194,23 @@ export async function sendCurrentWordCloud(
 export function initCronGeneration(
   targetList: TargetList,
   cronTime: string | Date | DateTime = "0 0 13 * * *",
-  rankLimit: number = 500
+  rankLimit: number = 500,
 ) {
   try {
     console.log(`[INIT] [WORD_CLOUD] set a cronJob [${cronTime}]`);
     return new CronJob(cronTime, async () => {
       console.log(
-        `[${format(
-          new Date(),
-          "yyyy-MM-dd HH:mm:ss"
-        )}] [WORD_CLOUD] [PIXIV] start`
+        `[${dayjs().format(
+          "YYYY-MM-DD HH:mm:ss:SSS",
+        )}] [WORD_CLOUD] [PIXIV] start`,
       );
 
       await sendCurrentWordCloud(targetList, rankLimit);
 
       console.log(
-        `[${format(
-          new Date(),
-          "yyyy-MM-dd HH:mm:ss"
-        )}] [WORD_CLOUD] [PIXIV] end`
+        `[${dayjs().format(
+          "YYYY-MM-DD HH:mm:ss:SSS",
+        )}] [WORD_CLOUD] [PIXIV] end`,
       );
     });
   } catch (error) {

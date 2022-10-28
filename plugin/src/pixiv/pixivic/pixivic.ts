@@ -1,4 +1,3 @@
-import { formatInTimeZone } from "date-fns-tz";
 import axios from "axios";
 import {
   PixivicDate,
@@ -9,8 +8,7 @@ import {
   PixivicRankingParam,
   PixvicListResponse,
 } from "./pixivic.type";
-import { format, subDays } from "date-fns";
-import { zhCN } from "date-fns/locale";
+import dayjs from "dayjs";
 import { getPixivImageToBase64FromPixivCat } from "../pixivRE/pixivCat";
 
 /**
@@ -42,7 +40,7 @@ export async function getListFromPixivic({
   page = 1,
 }: PixivicRankingParam) {
   console.log(
-    `[PIXIV] getImageList\n\tdate: ${date}\n\tmode: ${mode}\n\tpageSize: ${pageSize}\n\tpage: ${page}`
+    `[PIXIV] getImageList\n\tdate: ${date}\n\tmode: ${mode}\n\tpageSize: ${pageSize}\n\tpage: ${page}`,
   );
 
   const response = await pixivic.get(``, {
@@ -89,20 +87,15 @@ export async function getRandomPixivicImage(imageList: Array<PixivicListItem>) {
 }
 
 export async function getRandomImageWithPixivic(
-  date: PixivicDate = formatInTimeZone(
-    subDays(new Date(), 2),
-    "America/Araguaina",
-    "yyyy-MM-dd"
-  ),
+  date: PixivicDate = dayjs()
+    .subtract(2, "day")
+    .tz("America/Araguaina")
+    .format("YYYY-MM-DD"),
   mode: PixivicMode = "day",
   pageSize: PixivicPageSize = 100,
-  page: PixivicPage = 1
+  page: PixivicPage = 1,
 ) {
-  console.log(
-    `${format(new Date(), "[yyyy-MM-dd HH:mm:ss]", {
-      locale: zhCN,
-    })} [PIXIV] start`
-  );
+  console.log(`[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] start`);
 
   let imageListResponse = await getListFromPixivic({
     date,
@@ -117,7 +110,7 @@ export async function getRandomImageWithPixivic(
   // );
 
   let tempImageList = imageListResponse.data?.filter(
-    (item) => item !== undefined
+    (item) => item !== undefined,
   );
 
   if (!tempImageList || tempImageList.length === 0) {
@@ -128,10 +121,6 @@ export async function getRandomImageWithPixivic(
   let base64Image: string | undefined = undefined;
   base64Image = await getRandomPixivicImage(tempImageList);
 
-  console.log(
-    `${format(new Date(), "[yyyy-MM-dd HH:mm:ss]", {
-      locale: zhCN,
-    })} [PIXIV] end`
-  );
+  console.log(`[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] end`);
   return base64Image;
 }

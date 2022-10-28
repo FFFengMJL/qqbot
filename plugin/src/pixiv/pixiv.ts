@@ -1,5 +1,4 @@
-import { subDays } from "date-fns";
-import { format, utcToZonedTime } from "date-fns-tz";
+import dayjs from "dayjs";
 import {
   PixivArtworksContent,
   PixivArtworksIllust,
@@ -89,7 +88,7 @@ export async function getRandomImageWithPixivByHtml() {
 
   const items = cheerio.load(responseString)('section[class="ranking-item"]'); // 获取列表
   const itemsWithoutMange = items.filter(
-    index => !checkIsMangeFromCheerio(items, index),
+    (index) => !checkIsMangeFromCheerio(items, index),
   ); // 筛选，过滤掉漫画
 
   const index = Math.floor(Math.random() * itemsWithoutMange.length);
@@ -276,17 +275,17 @@ export async function getRandomImageWithPixiv(
  * @returns
  */
 export function filterImageList(imageList: Array<PixivRankingImageItem>) {
-  return imageList.filter(item => {
+  return imageList.filter((item) => {
     // 短路操作
 
     // tag 判断,不含有对应的 tag
-    if (item.tags.some(tag => TAG_EXCLUDE_FILTER.has(tag))) return false;
+    if (item.tags.some((tag) => TAG_EXCLUDE_FILTER.has(tag))) return false;
 
     // 作者过滤
     if (ILLUSTOR_FILTER.has(String(item.illust_id))) return false;
 
     // 图片内容类型判断
-    const typeCheckFail = Object.keys(TYPE_FILTER).some(_ => {
+    const typeCheckFail = Object.keys(TYPE_FILTER).some((_) => {
       const type = _ as keyof typeof TYPE_FILTER;
       return TYPE_FILTER[type] !== item.illust_content_type[type];
     }); // 符合 type 的要求
@@ -305,20 +304,20 @@ export function filterImageList(imageList: Array<PixivRankingImageItem>) {
  * @returns
  */
 export function filterImageListFromDB(imageList: Array<PixivRankingImage>) {
-  return imageList.filter(item => {
+  return imageList.filter((item) => {
     // 短路操作
 
     // tag 判断
     const tagCheckFail = item.tags
       .split(",")
-      .some(tag => TAG_EXCLUDE_FILTER.has(tag)); // 含有对应的 tag
+      .some((tag) => TAG_EXCLUDE_FILTER.has(tag)); // 含有对应的 tag
     if (tagCheckFail) return false;
 
     // 作者过滤
     if (ILLUSTOR_FILTER.has(String(item.user_id))) return false;
 
     // 作品内容类型检查
-    const typeCheckFail = Object.keys(TYPE_FILTER).some(_ => {
+    const typeCheckFail = Object.keys(TYPE_FILTER).some((_) => {
       const type = _ as keyof typeof TYPE_FILTER;
       return TYPE_FILTER[type] !== item[type];
     }); // 不符合 type 的要求
@@ -339,7 +338,7 @@ export function filterImageListFromDB(imageList: Array<PixivRankingImage>) {
 export async function getPixivImageToBase64(url: string) {
   try {
     console.log(
-      `[PIXIV] url: ${url} [${format(new Date(), "yyyy-MM-dd HH:mm:ss:SSS")}]`,
+      `[PIXIV] url: ${url} [${dayjs().format("YYYY-MM-dd HH:mm:ss:SSS")}]`,
     );
     const fileResponse = await PixivClient.get(url, {
       responseType: "arraybuffer",
@@ -347,17 +346,14 @@ export async function getPixivImageToBase64(url: string) {
     console.log(
       `[PIXIV] i.pximg.net response: ${fileResponse.status} ${
         fileResponse.data.length
-      } [${format(new Date(), "yyyy-MM-dd HH:mm:ss:SSS")}]`,
+      } [${dayjs().format("YYYY-MM-dd HH:mm:ss:SSS")}]`,
     );
     if (fileResponse.status !== 200) {
       return undefined;
     }
 
     console.log(
-      `[PIXIV] [BASE64] start [${format(
-        new Date(),
-        "yyyy-MM-dd HH:mm:ss:SSS",
-      )}]`,
+      `[PIXIV] [BASE64] start [${dayjs().format("YYYY-MM-dd HH:mm:ss:SSS")}]`,
     );
 
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
@@ -485,11 +481,11 @@ export async function getRandomImageWithPixivFromDB(
 
     // 获取一页列表
 
-    const now = new Date();
-    let rankDay = format(subDays(now, 1), "yyyyMMdd");
+    const now = dayjs();
+    let rankDate = now.subtract(1, "day").format("YYYYMMDD");
     let imageList = await PixivDBClient.pixivRankingImage.findMany({
       where: {
-        rankDate: rankDay,
+        rankDate,
         rank: {
           lte: maxLimit,
         },
@@ -497,10 +493,10 @@ export async function getRandomImageWithPixivFromDB(
     });
 
     if (imageList.length === 0) {
-      rankDay = format(subDays(now, 2), "yyyyMMdd");
+      rankDate = now.subtract(2, "day").format("YYYYMMDD");
       imageList = await PixivDBClient.pixivRankingImage.findMany({
         where: {
-          rankDate: rankDay,
+          rankDate,
           rank: {
             lte: maxLimit,
           },
@@ -517,7 +513,7 @@ export async function getRandomImageWithPixivFromDB(
       Math.abs(
         CRC32Str(
           (optionMessage ?? "") + now.toLocaleString(),
-          Math.floor(Math.random() * now.getTime()),
+          Math.floor(Math.random() * +now),
         ),
       ) % filteredImageList.length; // 随机选取图片
     const targetImageItem = filteredImageList[randomImageIndex];
@@ -536,7 +532,7 @@ export async function getRandomImageWithPixivFromDB(
     const imageSrc = targetArtwork.urls.regular;
     let base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
     console.log(
-      `[PIXIV] [BASE64] end [${format(new Date(), "yyyy-MM-dd HH:mm:ss:SSS")}]`,
+      `[PIXIV] [BASE64] end [${dayjs().format("YYYY-MM-dd HH:mm:ss:SSS")}]`,
     );
 
     if (!base64) {
@@ -618,7 +614,7 @@ export async function getArtworkFromPixiv(illustId: number) {
           url_original: artwork.urls.original,
         },
       })
-      .then(artwork => {
+      .then((artwork) => {
         console.log(`[PIXIV] [DB:Artwork] create`, artwork.illustId);
       });
 
@@ -630,7 +626,7 @@ export async function getArtworkFromPixiv(illustId: number) {
 }
 
 export function getUTC0TimeString(date: Date) {
-  return format(utcToZonedTime(date, "UTC"), "yyyy-MM-dd'T'HH:mm:ssxxx");
+  return dayjs(date).utc().format();
 }
 
 /**
@@ -666,11 +662,11 @@ export async function getRandomImageWithPixivFromDB_V2(
     console.log(`[PIXIV] optionMessage: [${optionMessage}]`);
 
     // 获取一页列表
-    const now = new Date();
-    let rankDay = format(subDays(now, 1), "yyyyMMdd");
+    const now = dayjs();
+    let rankDate = now.subtract(1, "day").format("YYYYMMDD");
     let imageList = await PixivDBClient.pixivRankingImage.findMany({
       where: {
-        rankDate: rankDay,
+        rankDate,
         rank: {
           lte: maxLimit,
         },
@@ -678,10 +674,10 @@ export async function getRandomImageWithPixivFromDB_V2(
     });
 
     if (imageList.length === 0) {
-      rankDay = format(subDays(now, 2), "yyyyMMdd");
+      rankDate = now.subtract(2, "day").format("YYYYMMDD");
       imageList = await PixivDBClient.pixivRankingImage.findMany({
         where: {
-          rankDate: rankDay,
+          rankDate,
           rank: {
             lte: maxLimit,
           },
@@ -698,14 +694,14 @@ export async function getRandomImageWithPixivFromDB_V2(
       Math.abs(
         CRC32Str(
           (optionMessage ?? "") + now.toLocaleString(),
-          Math.floor(Math.random() * now.getTime()),
+          Math.floor(Math.random() * +now),
         ),
       ) % filteredImageList.length; // 随机选取图片
     const targetImageItem: PixivRankingImage =
       filteredImageList[randomImageIndex];
 
     console.log(
-      `[PIXIV] date[${rankDay}] timeStamp[${now.getTime()}] randomIndex[${randomImageIndex}] `,
+      `[PIXIV] date[${rankDate}] timeStamp[${+now}] randomIndex[${randomImageIndex}] `,
     );
 
     const { title, user_name } = targetImageItem;

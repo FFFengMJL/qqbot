@@ -1,18 +1,18 @@
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import { size } from "lodash";
 
 export function logError(error: any) {
-  const nowString = `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}]`;
+  const nowString = `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`;
   if (error.response) {
     // 请求成功发出且服务器也响应了状态码，但状态代码超出了 2xx 的范围
     // console.log(error.response.data);
     console.error(
       `${nowString} [ERROR] [response] status`,
-      error.response.status
+      error.response.status,
     );
     console.error(
       `${nowString} [ERROR] [response] headers`,
-      error.response.headers
+      error.response.headers,
     );
   } else if (error.request) {
     // 请求已经成功发起，但没有收到响应

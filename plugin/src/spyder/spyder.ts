@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import { RSSHubPixivBookmarkIllust } from "@prisma/client";
-import { format } from "date-fns-tz";
+import dayjs from "dayjs";
 import { MessageType, Message, sendMessage, TargetList } from "./../http/http";
 import {
   getHomeImageBase64,
@@ -83,13 +83,13 @@ export function initFF14Spyder(
   try {
     return new CronJob(cronTime, async () => {
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [FF14] start`,
+        `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] [FF14] start`,
       );
 
       await spyFF14(targetList);
 
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [FF14] end`,
+        `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] [FF14] end`,
       );
     });
   } catch (error) {
@@ -148,13 +148,13 @@ export function initPixivRankingSpyder(
   try {
     return new CronJob(cronTime, async () => {
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [PIXIV] start`,
+        `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] [PIXIV] start`,
       );
 
       await spyPixivRanking(mode, maxPage);
 
       console.log(
-        `[${format(new Date(), "yyyy-MM-dd HH:mm:ss")}] [SPYDER] [PIXIV] end`,
+        `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] [PIXIV] end`,
       );
     });
   } catch (error) {
@@ -194,18 +194,16 @@ export async function spyPixivRanking(
         }
       }
       console.log(
-        `[${format(
-          new Date(),
-          "yyyy-MM-dd HH:mm:ss",
+        `[${dayjs().format(
+          "YYYY-MM-DD HH:mm:ss:SSS",
         )} [PIXIV] currentPage [${page}] content lenth [${imageItems.length}]`,
       );
     }
   }
 
   console.log(
-    `[${format(
-      new Date(),
-      "yyyy-MM-dd HH:mm:ss",
+    `[${dayjs().format(
+      "YYYY-MM-DD HH:mm:ss:SSS",
     )}] [SPYDER] [PIXIV] total [${rankingLength}] image, upsert [${upsertItemLength}] in DB`,
   );
 
@@ -248,7 +246,7 @@ export async function spyRSSHubPixivBookmark(
 
   // 当新增数量不为 0 时才进行消息发送
   if (newItems.length) {
-    newItems.forEach(async item => {
+    newItems.forEach(async (item) => {
       const url = load(item.description)("img").eq(0).attr("src");
       if (!url) return;
       const directLink = fileURL2PixivReURL(url);
@@ -298,7 +296,7 @@ export async function sendNewPixivBookmarks(
   messageType: MessageType,
   targetId: Number,
 ) {
-  const combineMessage: Message = items.map(item => {
+  const combineMessage: Message = items.map((item) => {
     return {
       type: "text",
       data: {
@@ -338,18 +336,16 @@ export function initRSSHubPixivBookmarkSpyder(
   try {
     return new CronJob(cronTime, async () => {
       console.log(
-        `[${format(
-          new Date(),
-          "yyyy-MM-dd HH:mm:ss",
+        `[${dayjs().format(
+          "YYYY-MM-DD HH:mm:ss:SSS",
         )}] [SPYDER] [RSSHUB] pixivBookmark start`,
       );
 
       await spyRSSHubPixivBookmark(userId, targetList, blurParam);
 
       console.log(
-        `[${format(
-          new Date(),
-          "yyyy-MM-dd HH:mm:ss",
+        `[${dayjs().format(
+          "YYYY-MM-DD HH:mm:ss:SSS",
         )}] [SPYDER] [RSSHUB] pixivBookmark end`,
       );
     });

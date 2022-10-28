@@ -1,6 +1,6 @@
 import { CronJob } from "cron";
 import { DateTime } from "luxon";
-import { format } from "date-fns";
+import dayjs from "dayjs";
 import {
   getRandomImageWithPixivFromDB,
   getRandomImageWithPixivFromDB_V2,
@@ -23,8 +23,8 @@ export function initClock(
   cronTime: [${cronTime}]
   targetList [
     ${targetList
-      .map(target => `targetType ${target.targetType} ${target.targetId}`)
-      .join("\n    ")}
+      .map((target) => `targetType ${target.targetType} ${target.targetId}`)
+      .join("\n")}
   ]`);
     return new CronJob(cronTime, () => clock(targetList, pixivRankLimit));
   } catch (error) {
@@ -43,16 +43,12 @@ export async function clock(
   targetList: Array<{ targetType: MessageType; targetId: Number }>,
   pixivRankLimit: number = 0,
 ) {
-  const now = new Date();
+  const now = dayjs();
   const postMessage: Message = [
     {
       type: "text",
       data: {
-        text: `现在时间是：${now.toLocaleString("zh-CN", {
-          hourCycle: "h23",
-          dateStyle: "full",
-          timeStyle: "medium",
-        })}`,
+        text: `现在时间是：${now.format("YYYY年M月D日ddd HH:mm:ss")}`,
       },
     },
   ];
@@ -86,11 +82,10 @@ export async function clock(
   }
 
   targetList.forEach(({ targetType, targetId }) => {
-    return sendMessage(targetType, targetId, postMessage).then(result => {
+    return sendMessage(targetType, targetId, postMessage).then((result) => {
       console.log(
-        `[${format(
-          now,
-          "yyyy-MM-dd HH:mm:ss",
+        `[${now.format(
+          "YYYY-MM-DD HH:mm:ss:SSS",
         )}] [CLOCK] send [${targetType}] [${targetId}] [${result?.status}]`,
       );
     });

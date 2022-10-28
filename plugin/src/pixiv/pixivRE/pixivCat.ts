@@ -1,5 +1,5 @@
-import axios, { AxiosResponse } from "axios";
-import { format } from "date-fns";
+import axios from "axios";
+import dayjs from "dayjs";
 import { logError } from "../../utils/error";
 
 /**
@@ -37,10 +37,7 @@ export async function getPixivImageToBase64FromPixivCat(url: string) {
     }
 
     console.log(
-      `[PIXIV] [BASE64] start [${format(
-        new Date(),
-        "yyyy-MM-dd HH:mm:ss:SSS",
-      )}]`,
+      `[PIXIV] [BASE64] start [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
     );
 
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
@@ -71,10 +68,7 @@ export async function getPixivImageBufferFromPixivCat(url: string) {
     }
 
     console.log(
-      `[PIXIV] [BUFFER] start [${format(
-        new Date(),
-        "yyyy-MM-dd HH:mm:ss:SSS",
-      )}]`,
+      `[PIXIV] [BUFFER] start [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
     );
 
     return Buffer.from(fileResponse.data, "binary");
