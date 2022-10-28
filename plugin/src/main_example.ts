@@ -7,6 +7,14 @@ import * as Spyder from "./spyder/spyder";
 import * as Price from "./price/price";
 import * as WordCloud from "./wordCloud/wordCloud";
 
+import dayjs from "dayjs";
+import "dayjs/locale/zh-cn";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+dayjs.locale("zh-cn");
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
 const se = express(); // create a server
 
 se.use(bodyParser.urlencoded({ extended: true }));
@@ -95,7 +103,7 @@ function main() {
       { targetType: "group", targetId: 123456798 },
     ],
     100,
-    "0 0 * * * *"
+    "0 0 * * * *",
   )?.start();
 
   // 初始化国服 FF14 官网新闻爬虫并开始任务
@@ -113,12 +121,12 @@ function main() {
     { messageType: "group", targetId: 123456789 },
     { messageType: "group", targetId: 123456789 },
   ])?.start();
-}
 
-// 初始化词云定期生成任务
-WordCloud.initCronGeneration([
-  { messageType: "group", targetId: 123456789 },
-  { messageType: "group", targetId: 123456789 },
-])?.start();
+  // 初始化词云定期生成任务
+  WordCloud.initCronGeneration([
+    { messageType: "group", targetId: 123456789 },
+    { messageType: "group", targetId: 123456789 },
+  ])?.start();
+}
 
 main();

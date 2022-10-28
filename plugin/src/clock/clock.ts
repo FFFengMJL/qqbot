@@ -24,7 +24,7 @@ export function initClock(
   targetList [
     ${targetList
       .map((target) => `targetType ${target.targetType} ${target.targetId}`)
-      .join("\n")}
+      .join("\n\t\t")}
   ]`);
     return new CronJob(cronTime, () => clock(targetList, pixivRankLimit));
   } catch (error) {
