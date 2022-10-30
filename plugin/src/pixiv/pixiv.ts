@@ -338,7 +338,7 @@ export function filterImageListFromDB(imageList: Array<PixivRankingImage>) {
 export async function getPixivImageToBase64(url: string) {
   try {
     console.log(
-      `[PIXIV] url: ${url} [${dayjs().format("YYYY-MM-dd HH:mm:ss:SSS")}]`,
+      `[PIXIV] url: ${url} [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
     );
     const fileResponse = await PixivClient.get(url, {
       responseType: "arraybuffer",
@@ -346,14 +346,14 @@ export async function getPixivImageToBase64(url: string) {
     console.log(
       `[PIXIV] i.pximg.net response: ${fileResponse.status} ${
         fileResponse.data.length
-      } [${dayjs().format("YYYY-MM-dd HH:mm:ss:SSS")}]`,
+      } [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
     );
     if (fileResponse.status !== 200) {
       return undefined;
     }
 
     console.log(
-      `[PIXIV] [BASE64] start [${dayjs().format("YYYY-MM-dd HH:mm:ss:SSS")}]`,
+      `[PIXIV] [BASE64] start [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
     );
 
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
@@ -532,7 +532,7 @@ export async function getRandomImageWithPixivFromDB(
     const imageSrc = targetArtwork.urls.regular;
     let base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
     console.log(
-      `[PIXIV] [BASE64] end [${dayjs().format("YYYY-MM-dd HH:mm:ss:SSS")}]`,
+      `[PIXIV] [BASE64] end [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
     );
 
     if (!base64) {
