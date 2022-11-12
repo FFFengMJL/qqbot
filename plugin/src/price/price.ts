@@ -1,32 +1,28 @@
 import { Message, MessageType, sendMessage } from "../http/http";
 import { getCurrentlyShownById, isWorldOrDC, WorldOrDC } from "./universalis";
 import { searchTradableItemFromXIVAPIByName } from "./xivapi";
+import dayjs from "dayjs";
+
 export async function getPrice(
   targetType: MessageType,
   targetId: Number,
   itemString: String,
-  worldOrDC: WorldOrDC = "猫小胖"
+  worldOrDC: WorldOrDC = "猫小胖",
 ) {
   try {
     console.log(
-      `[${new Date().toLocaleString("zh-cn", {
-        hourCycle: "h23",
-        timeStyle: "medium",
-        dateStyle: "short",
-      })}] [PRICE] search [${itemString}] in [${worldOrDC}]`
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PRICE] search [${itemString}] in [${worldOrDC}]`,
     );
     const itemSearchResponse = await searchTradableItemFromXIVAPIByName(
-      itemString
+      itemString,
     );
 
     console.log(
-      `[${new Date().toLocaleString("zh-cn", {
-        hourCycle: "h23",
-        timeStyle: "medium",
-        dateStyle: "short",
-      })}] [PRICE] get [${
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]  [PRICE] get [${
         itemSearchResponse.Pagination.ResultsTotal
-      }] results about [${itemString}]`
+      }] results about [${itemString}]`,
     );
 
     if (itemSearchResponse.Pagination.ResultsTotal === 0) {
@@ -34,23 +30,23 @@ export async function getPrice(
         targetType,
         targetId,
         "没有对应的物品，请重新输入",
-        false
+        false,
       );
     } else if (itemSearchResponse.Pagination.ResultsTotal > 5) {
       let itemList = itemSearchResponse.Results.map((item) => item.Name).join(
-        "\n"
+        "\n",
       );
 
       return sendMessage(
         targetType,
         targetId,
         `搜索到多个物品，请确认：\n${itemList}`,
-        false
+        false,
       );
     } else {
       const currentlyShown = await getCurrentlyShownById(
         itemSearchResponse.Results[0].ID,
-        worldOrDC
+        worldOrDC,
       );
 
       const onsaleList = currentlyShown.listings
@@ -75,13 +71,13 @@ export async function getPrice(
               hourCycle: "h23",
               timeStyle: "short",
               dateStyle: "short",
-            }
+            },
           )}]`;
         })
         .join("\n");
 
       let itemList = itemSearchResponse.Results.map((item) => item.Name).join(
-        "\n"
+        "\n",
       );
       const warning = `搜索到 ${itemSearchResponse.Pagination.PageTotal} 个物品，默认使用选择第 1 个：\n${itemList}\n\n`;
 
@@ -95,15 +91,13 @@ export async function getPrice(
       ];
 
       console.log(
-        `[${new Date().toLocaleString("zh-cn", {
-          hourCycle: "h23",
-          timeStyle: "medium",
-          dateStyle: "short",
-        })}] [PRICE] get [${currentlyShown.listings.length}] onsales and [${
+        `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PRICE] get [${
+          currentlyShown.listings.length
+        }] onsales and [${
           currentlyShown.recentHistory.length
         }] history about [${
           itemSearchResponse.Results[0].Name
-        }] in [${worldOrDC}]`
+        }] in [${worldOrDC}]`,
       );
 
       return sendMessage(targetType, targetId, message);
@@ -117,14 +111,14 @@ export async function getPrice(
 export function price(
   messageList: Array<String>,
   targetType: MessageType,
-  targetId: Number
+  targetId: Number,
 ) {
   if (messageList.length < 2) {
     sendMessage(
       targetType,
       targetId,
       "/price 物品名 大区/服务器完整名称（默认猫区）",
-      false
+      false,
     );
   } else if (messageList.length == 2) {
     getPrice(targetType, targetId, messageList[1]);

@@ -25,7 +25,9 @@ export function generateWordCloudWithText(
   pythonFilePath: string = "plugin/src/wordCloud",
   pythonFilename: string = "wordCloud.py",
 ) {
-  console.log(`[WORD_CLOUD] start: 
+  console.log(`[${dayjs().format(
+    "YYYY-MM-DD HH:mm:ss:SSS",
+  )}] [WORD_CLOUD] start: 
   pythonFile [${pythonFilePath}/${pythonFilename}]
   targetFile [${targetFilePath}/${targetFilename}]
   font [${fontPath}]
@@ -44,7 +46,11 @@ export function generateWordCloudWithText(
   }
 
   const output = python.stdout.toString().slice(0, -1); // 输出带了一个回车需要处理
-  console.log(`[WORD_CLOUD] end output [${output}]`);
+  console.log(
+    `[${dayjs().format(
+      "YYYY-MM-DD HH:mm:ss:SSS",
+    )}] [WORD_CLOUD] end output [${output}]`,
+  );
 
   return output;
 }
@@ -107,7 +113,11 @@ export async function getWordCloudWithRankImage(
     } as WordCloudGenerationResult;
   } catch (error) {
     // 文件不存在，进行生成
-    console.log(`[WORD_CLOUD] ${imagePath} not exist, generating`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [WORD_CLOUD] ${imagePath} not exist, generating`,
+    );
     const wordCloudImage = await generateWordCloudWithPixivRankImage(
       rankDate,
       rankLimit,
@@ -177,7 +187,11 @@ export async function sendCurrentWordCloud(
 
   // 发送消息
   targetList.forEach(({ messageType, targetId }) => {
-    console.log(`[WORD_CLOUD] sendTo [${messageType}] [${targetId}]`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [WORD_CLOUD] sendTo [${messageType}] [${targetId}]`,
+    );
     return sendMessage(messageType, targetId, message);
   });
 

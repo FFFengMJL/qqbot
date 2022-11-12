@@ -40,7 +40,9 @@ export async function getListFromPixivic({
   page = 1,
 }: PixivicRankingParam) {
   console.log(
-    `[PIXIV] getImageList\n\tdate: ${date}\n\tmode: ${mode}\n\tpageSize: ${pageSize}\n\tpage: ${page}`,
+    `[${dayjs().format(
+      "YYYY-MM-DD HH:mm:ss:SSS",
+    )}] [PIXIV] getImageList\n\tdate: ${date}\n\tmode: ${mode}\n\tpageSize: ${pageSize}\n\tpage: ${page}`,
   );
 
   const response = await pixivic.get(``, {
@@ -64,16 +66,28 @@ export async function getRandomPixivicImage(imageList: Array<PixivicListItem>) {
   try {
     const listLength = imageList.length;
 
-    console.log(`[PIXIV] imageListLength: ${listLength}`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] imageListLength: ${listLength}`,
+    );
     let index = Math.floor(Math.random() * listLength);
-    console.log(`[PIXIV] index: ${index} id: ${imageList[index].id}`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] index: ${index} id: ${imageList[index].id}`,
+    );
 
     while (
       imageList[index].tags.findIndex((tag) => tag.name == "漫画") !== -1
     ) {
       imageList = imageList.splice(index, 1);
       index = Math.floor(Math.random() * listLength);
-      console.log(`[PIXIV] index: ${index} id: ${imageList[index].id}`);
+      console.log(
+        `[[${dayjs().format(
+          "YYYY-MM-DD HH:mm:ss:SSS",
+        )}] PIXIV] index: ${index} id: ${imageList[index].id}`,
+      );
     }
 
     const originUrl = imageList[index].imageUrls[0].original;
@@ -114,7 +128,11 @@ export async function getRandomImageWithPixivic(
   );
 
   if (!tempImageList || tempImageList.length === 0) {
-    console.log(`[PIXIV] get image list error`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] get image list error`,
+    );
     return undefined;
   }
 

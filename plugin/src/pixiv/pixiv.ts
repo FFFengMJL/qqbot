@@ -103,7 +103,7 @@ export async function getRandomImageWithPixivByHtml() {
     .replace("_master1200", ""); // 作品链接（这个获取获取方式是错的）
 
   if (!artist || !title || !artworkId || !src) {
-    console.log(artist, title, artworkId, src);
+    // console.log(artist, title, artworkId, src);
     return null;
   }
 
@@ -131,7 +131,11 @@ export async function getRankingListFromPixiv(
   date?: string,
 ) {
   try {
-    console.log(`[PIXIV] mode[${mode}] page[${page}]${date ? ` ${date}` : ""}`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] mode[${mode}] page[${page}]${date ? ` ${date}` : ""}`,
+    );
     const response = await PixivClient.get(`/ranking.php`, {
       params: {
         mode,
@@ -163,9 +167,17 @@ export async function getRankingListFromPixiv(
  */
 export async function getImageArtworkHtml(illustId: number) {
   try {
-    console.log(`[PIXIV] [GET] /artworks/${illustId}`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] [GET] /artworks/${illustId}`,
+    );
     const response = await PixivClient.get(`/artworks/${illustId}`);
-    console.log(`[PIXIV] [GET] [${response.status}]`);
+    console.log(
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] [GET] [${
+        response.status
+      }]`,
+    );
 
     if (response.status !== 200) {
       return null;
@@ -228,7 +240,9 @@ export async function getRandomImageWithPixiv(
   // 筛选图片列表
   const filteredImageList = filterImageList(imageList);
   console.log(
-    `[PIXIV] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`,
+    `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] imageListLength[${
+      imageList.length
+    }] filteredImageListLength[${filteredImageList.length}]`,
   );
 
   // 随机选取图片
@@ -236,7 +250,9 @@ export async function getRandomImageWithPixiv(
   const targetImageItem = filteredImageList[randomImageIndex];
   const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
   console.log(
-    `[PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`,
+    `[${dayjs().format(
+      "YYYY-MM-DD HH:mm:ss:SSS",
+    )}] [PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`,
   );
 
   // 获取原图 url
@@ -338,22 +354,24 @@ export function filterImageListFromDB(imageList: Array<PixivRankingImage>) {
 export async function getPixivImageToBase64(url: string) {
   try {
     console.log(
-      `[PIXIV] url: ${url} [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] url: ${url}`,
     );
     const fileResponse = await PixivClient.get(url, {
       responseType: "arraybuffer",
     });
     console.log(
-      `[PIXIV] i.pximg.net response: ${fileResponse.status} ${
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] i.pximg.net response: ${fileResponse.status} ${
         fileResponse.data.length
-      } [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
+      }`,
     );
     if (fileResponse.status !== 200) {
       return undefined;
     }
 
     console.log(
-      `[PIXIV] [BASE64] start [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] [BASE64] start`,
     );
 
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
@@ -477,7 +495,11 @@ export async function getRandomImageWithPixivFromDB(
   optionMessage?: string,
 ) {
   try {
-    console.log(`[PIXIV] optionMessage: [${optionMessage}]`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] optionMessage: [${optionMessage}]`,
+    );
 
     // 获取一页列表
 
@@ -506,7 +528,11 @@ export async function getRandomImageWithPixivFromDB(
     // 筛选图片列表
     const filteredImageList = filterImageListFromDB(imageList);
     console.log(
-      `[PIXIV] [DB:PixivRankingImage] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`,
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] [DB:PixivRankingImage] imageListLength[${
+        imageList.length
+      }] filteredImageListLength[${filteredImageList.length}]`,
     );
 
     const randomImageIndex =
@@ -519,7 +545,9 @@ export async function getRandomImageWithPixivFromDB(
     const targetImageItem = filteredImageList[randomImageIndex];
     const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
     console.log(
-      `[PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`,
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] randomIndex[${randomImageIndex}] artworkUrl[${artworkUrl}]`,
     );
 
     const targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
@@ -532,7 +560,7 @@ export async function getRandomImageWithPixivFromDB(
     const imageSrc = targetArtwork.urls.regular;
     let base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
     console.log(
-      `[PIXIV] [BASE64] end [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] [BASE64] end`,
     );
 
     if (!base64) {
@@ -615,7 +643,11 @@ export async function getArtworkFromPixiv(illustId: number) {
         },
       })
       .then((artwork) => {
-        console.log(`[PIXIV] [DB:Artwork] create`, artwork.illustId);
+        console.log(
+          `[${dayjs().format(
+            "YYYY-MM-DD HH:mm:ss:SSS",
+          )}] [PIXIV] [DB:Artwork] create ${artwork.illustId}`,
+        );
       });
 
     return artwork;
@@ -659,7 +691,11 @@ export async function getRandomImageWithPixivFromDB_V2(
   optionMessage?: string,
 ) {
   try {
-    console.log(`[PIXIV] optionMessage: [${optionMessage}]`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] optionMessage: [${optionMessage}]`,
+    );
 
     // 获取一页列表
     const now = dayjs();
@@ -687,7 +723,11 @@ export async function getRandomImageWithPixivFromDB_V2(
     // 筛选图片列表
     const filteredImageList = filterImageListFromDB(imageList);
     console.log(
-      `[PIXIV] [DB:PixivRankingImage] imageListLength[${imageList.length}] filteredImageListLength[${filteredImageList.length}]`,
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] [DB:PixivRankingImage] imageListLength[${
+        imageList.length
+      }] filteredImageListLength[${filteredImageList.length}]`,
     );
 
     const randomImageIndex =
@@ -701,12 +741,18 @@ export async function getRandomImageWithPixivFromDB_V2(
       filteredImageList[randomImageIndex];
 
     console.log(
-      `[PIXIV] date[${rankDate}] timeStamp[${+now}] randomIndex[${randomImageIndex}] `,
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] date[${rankDate}] timeStamp[${+now}] randomIndex[${randomImageIndex}] `,
     );
 
     const { title, user_name } = targetImageItem;
     const artworkUrl = `https://pixiv.net/artworks/${targetImageItem.illust_id}`;
-    console.log(`[PIXIV] artworkUrl[${artworkUrl}]`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] artworkUrl[${artworkUrl}]`,
+    );
 
     let targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
 

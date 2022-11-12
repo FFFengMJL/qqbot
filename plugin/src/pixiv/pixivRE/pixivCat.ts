@@ -27,17 +27,25 @@ const pixivCat = axios.create({
 export async function getPixivImageToBase64FromPixivCat(url: string) {
   try {
     const pixivCatUrl = url.replace("i.pximg.net", "i.pixiv.cat");
-    console.log(`[PIXIV] url: ${pixivCatUrl}`);
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] url: ${pixivCatUrl}`,
+    );
     const fileResponse = await pixivCat.get(pixivCatUrl);
     console.log(
-      `[PIXIV] pixiv.cat response: ${fileResponse.status} ${fileResponse.data.length}`,
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] pixiv.cat response: ${fileResponse.status} ${
+        fileResponse.data.length
+      }`,
     );
     if (fileResponse.status !== 200) {
       return undefined;
     }
 
     console.log(
-      `[PIXIV] [BASE64] start [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] [BASE64] start`,
     );
 
     return `base64://${Buffer.from(fileResponse.data, "binary").toString(
@@ -61,14 +69,18 @@ export async function getPixivImageBufferFromPixivCat(url: string) {
     console.log(`[PIXIV] url: ${pixivCatUrl}`);
     const fileResponse = await pixivCat.get(pixivCatUrl);
     console.log(
-      `[PIXIV] pixiv.cat response: ${fileResponse.status} ${fileResponse.data.length}`,
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] pixiv.cat response: ${fileResponse.status} ${
+        fileResponse.data.length
+      }`,
     );
     if (fileResponse.status !== 200) {
       return undefined;
     }
 
     console.log(
-      `[PIXIV] [BUFFER] start [${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}]`,
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] [BUFFER] start`,
     );
 
     return Buffer.from(fileResponse.data, "binary");
@@ -86,6 +98,10 @@ export function fileURL2PixivCatURL(url: string) {
   const pixivCatUrl = url
     .replace("i.pximg.net", "i.pixiv.cat")
     .replace("pixiv.rsshub.app", "i.pixiv.cat");
-  console.log(`[PIXIV] url: ${pixivCatUrl}`);
+  console.log(
+    `[${dayjs().format(
+      "YYYY-MM-DD HH:mm:ss:SSS",
+    )}] [PIXIV] url: ${pixivCatUrl}`,
+  );
   return pixivCatUrl;
 }

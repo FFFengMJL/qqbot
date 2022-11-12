@@ -38,7 +38,11 @@ export async function spyFF14(targetList: TargetList) {
     const currentNews = (await getNewsList()).Data;
     const unaddedNew: Array<New> = [];
 
-    console.log(`[SPYDER] currentNews: [${currentNews.length}]`);
+    console.log(
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] currentNews: [${
+        currentNews.length
+      }]`,
+    );
 
     // 遍历搜寻对应的新闻是否存在
     for (const item of currentNews) {
@@ -50,7 +54,11 @@ export async function spyFF14(targetList: TargetList) {
       }
     }
 
-    console.log(`[SPYDER] unaddedNews: [${unaddedNew.length}] ${unaddedNew}`);
+    console.log(
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] unaddedNews: [${
+        unaddedNew.length
+      }] ${unaddedNew}`,
+    );
 
     let newNewsInDB = 0;
     if (unaddedNew.length > 0) {
@@ -60,7 +68,9 @@ export async function spyFF14(targetList: TargetList) {
     }
 
     console.log(
-      `[SPYDER] add [${newNewsInDB}] in DB, now [${await getNewsCount()}]`,
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [SPYDER] add [${newNewsInDB}] in DB, now [${await getNewsCount()}]`,
     );
 
     return unaddedNew.length;
@@ -223,14 +233,24 @@ export async function spyRSSHubPixivBookmark(
   blurParam: number = Math.random() * 2 + 7,
 ) {
   // 从 RSSHub 获取 xml
-  console.log(`[SPYDER] [RSSHUB] get xml`);
+  console.log(
+    `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] [RSSHUB] get xml`,
+  );
   let xmlString = await getBookmarksFromOriginalRSSHub(userId);
   if (!xmlString) return xmlString;
 
   // 解析 xml 成对应的数组
-  console.log(`[SPYDER] [RSSHUB] parse xml`);
+  console.log(
+    `[${dayjs().format(
+      "YYYY-MM-DD HH:mm:ss:SSS",
+    )}] [SPYDER] [RSSHUB] parse xml`,
+  );
   const items = parseRSSHubPixivBookmarkXML(xmlString);
-  console.log(`[SPYDER] [RSSHUB] get [${items.length}] items`);
+  console.log(
+    `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] [RSSHUB] get [${
+      items.length
+    }] items`,
+  );
 
   const newItems: Array<RSSHubPixivBookmarkIllust> = [];
 
@@ -287,7 +307,11 @@ export async function spyRSSHubPixivBookmark(
     });
   }
 
-  console.log(`[SPYDER] [RSSHUB] get [${newItems.length}] new items`);
+  console.log(
+    `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [SPYDER] [RSSHUB] get [${
+      newItems.length
+    }] new items`,
+  );
   return newItems.length;
 }
 
