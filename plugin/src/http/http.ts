@@ -1,4 +1,5 @@
 import axios from "axios";
+import { logError } from "../utils/error";
 import { CQCode } from "./message";
 
 const BOT_HTTP_SERVER = {
@@ -68,13 +69,12 @@ export async function sendPrivateMessage(body: PrivateMessageBody) {
       {
         timeout: 60000,
         maxBodyLength: 30000000,
-      }
+      },
     );
 
     return response.data as MessageResponse;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -86,13 +86,12 @@ export async function sendGroupMessage(body: GroupMessageBody) {
       {
         timeout: 60000,
         maxBodyLength: 30000000,
-      }
+      },
     );
 
     return response.data as MessageResponse;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -100,7 +99,7 @@ export async function sendMessage(
   messageType: MessageType,
   targetId: Number,
   message: Message,
-  auto_escape: Boolean = false
+  auto_escape: Boolean = false,
 ) {
   if (messageType === "private") {
     return await sendPrivateMessage({

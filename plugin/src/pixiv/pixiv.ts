@@ -36,8 +36,10 @@ const PixivDBClient = {
 const PixivClient = axios.create({
   headers: {
     "User-Agent":
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36 Edg/105.0.1343.42",
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36 Edg/108.0.1462.54",
     Referer: "https://www.pixiv.net/",
+    accpet:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
   },
   proxy: {
     host: "127.0.0.1",
@@ -58,8 +60,7 @@ export async function getRankingStringFromPixivWithHtml() {
 
     return response.data as string;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -155,8 +156,7 @@ export async function getRankingListFromPixiv(
 
     return response.data as PixivRankingReponse;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -209,8 +209,7 @@ export function parseArtworkContentToJSON(html: string) {
   try {
     return JSON.parse(content) as PixivArtworksContent;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -453,8 +452,7 @@ export async function upsertImageRankingItem(
       },
     });
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -479,8 +477,7 @@ export async function isPixivRankingImageItemExistInDB(
 
     return result.rankDate == rankDate;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -501,8 +498,7 @@ export async function getRandomImageWithPixivFromDB(
       )}] [PIXIV] optionMessage: [${optionMessage}]`,
     );
 
-    // 获取一页列表
-
+    // 获取一天的列表
     const now = dayjs();
     let rankDate = now.subtract(1, "day").format("YYYYMMDD");
     let imageList = await PixivDBClient.pixivRankingImage.findMany({
@@ -525,6 +521,7 @@ export async function getRandomImageWithPixivFromDB(
         },
       });
     }
+
     // 筛选图片列表
     const filteredImageList = filterImageListFromDB(imageList);
     console.log(
@@ -558,14 +555,12 @@ export async function getRandomImageWithPixivFromDB(
 
     // 获取图片 url
     const imageSrc = targetArtwork.urls.regular;
-    let base64 = await getPixivImageToBase64FromPixivCat(imageSrc);
+    let base64 = await getPixivImageToBase64(imageSrc);
     console.log(
       `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] [BASE64] end`,
     );
 
-    if (!base64) {
-      base64 = await getPixivImageToBase64(imageSrc);
-    }
+    base64 ??= await getPixivImageToBase64FromPixivCat(imageSrc);
 
     return {
       title: targetImageItem.title,
@@ -574,8 +569,7 @@ export async function getRandomImageWithPixivFromDB(
       base64,
     } as PixivImage;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -603,11 +597,11 @@ export async function getArtworkFromPixiv(illustId: number) {
         createDate,
         uploadDate,
         urls: {
-          thumb: pixivArtwork.url_thumb,
-          mini: pixivArtwork.url_mini,
-          small: pixivArtwork.url_small,
-          regular: pixivArtwork.url_regular,
-          original: pixivArtwork.url_original,
+          thumb: pixivArtwork.url_thumb ?? "",
+          mini: pixivArtwork.url_mini ?? "",
+          small: pixivArtwork.url_small ?? "",
+          regular: pixivArtwork.url_regular ?? "",
+          original: pixivArtwork.url_original ?? "",
         },
       } as PixivArtworksIllustBasic;
     }
@@ -626,7 +620,7 @@ export async function getArtworkFromPixiv(illustId: number) {
       illustId,
     ) as PixivArtworksIllustBasic;
 
-    PixivDBClient.pixivArtwork
+    await PixivDBClient.pixivArtwork
       .create({
         data: {
           illustId: Number(artwork.illustId),
@@ -652,8 +646,7 @@ export async function getArtworkFromPixiv(illustId: number) {
 
     return artwork;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -675,8 +668,7 @@ export async function deletePixivRankingItem(illustId: number) {
     });
     return item;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
@@ -754,7 +746,7 @@ export async function getRandomImageWithPixivFromDB_V2(
       )}] [PIXIV] artworkUrl[${artworkUrl}]`,
     );
 
-    let targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
+    const targetArtwork = await getArtworkFromPixiv(targetImageItem.illust_id);
 
     if (!targetArtwork) {
       return targetArtwork;
@@ -772,8 +764,7 @@ export async function getRandomImageWithPixivFromDB_V2(
       base64: url,
     } as PixivImage;
   } catch (error) {
-    console.error(error);
-    return undefined;
+    return logError(error);
   }
 }
 
