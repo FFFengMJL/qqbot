@@ -12,6 +12,7 @@ import {
 import { New } from "../new/news.type";
 import { PixivNormalRankingMode } from "../pixiv/pixiv.type";
 import {
+  getPixivImageBuffer,
   getRankingListFromPixiv,
   isPixivRankingImageItemExistInDB,
   upsertImageRankingItem,
@@ -265,18 +266,23 @@ export async function spyRSSHubPixivBookmark(
   }
 
   // 当新增数量不为 0 时才进行消息发送
-  if (newItems.length) {
+  if (newItems.length && targetList.length) {
     newItems.forEach(async (item) => {
       const url = load(item.description)("img").eq(0).attr("src");
       if (!url) return;
       const directLink = fileURL2PixivReURL(url);
-      let imageBuffer = await getPixivImageBufferFromPixivCat(url);
-      while (!imageBuffer) {
-        imageBuffer = await getPixivImageBufferFromPixivCat(url);
-      }
+
+      // 分别从 i.pximg.net 和 i.pixiv.cat 获取图片
+      let imageBuffer = await getPixivImageBuffer(url);
+      imageBuffer ??= await getPixivImageBufferFromPixivCat(url);
+
+      if (!imageBuffer) return;
+
+      // 高斯模糊图片
       const blurImage = (
         await sharp(imageBuffer).blur(blurParam).toBuffer()
       ).toString("base64");
+
       targetList.forEach(async ({ messageType, targetId }) => {
         return sendMessage(messageType, targetId, [
           {

@@ -57,7 +57,7 @@ export async function getPixivImageToBase64FromPixivCat(url: string) {
 }
 
 /**
- * 通过 url 获取图片并转换成 base64 字符串
+ * 通过 url 获取图片的 Buffer
  * @param url 图片的 url，以 https://i.pximg.net 域名开头
  * @returns
  */

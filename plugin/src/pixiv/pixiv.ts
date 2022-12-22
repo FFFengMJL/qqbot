@@ -382,6 +382,43 @@ export async function getPixivImageToBase64(url: string) {
 }
 
 /**
+ * 通过 url 获取图片的 Buffer
+ * @param url 图片的 url，以 https://i.pximg.net 域名开头
+ * @returns
+ */
+export async function getPixivImageBuffer(url: string) {
+  try {
+    console.log(
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] url: ${url}`,
+    );
+
+    const fileResponse = await PixivClient.get(url, {
+      responseType: "arraybuffer",
+    });
+
+    console.log(
+      `[${dayjs().format(
+        "YYYY-MM-DD HH:mm:ss:SSS",
+      )}] [PIXIV] i.pximg.net response: ${fileResponse.status} ${
+        fileResponse.data.length
+      }`,
+    );
+
+    if (fileResponse.status !== 200) {
+      return undefined;
+    }
+
+    console.log(
+      `[${dayjs().format("YYYY-MM-DD HH:mm:ss:SSS")}] [PIXIV] [BUFFER] start`,
+    );
+
+    return Buffer.from(fileResponse.data, "binary");
+  } catch (error: any) {
+    return logError(error);
+  }
+}
+
+/**
  * 将排行榜的图片在数据库中创建或更新
  * @param imageItem 图片
  * @returns
